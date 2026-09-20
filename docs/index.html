@@ -73,10 +73,11 @@
       color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
       font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.85rem;
     }
-    [data-lang="en"] { display: none; }
-    html[lang="en"] [data-lang="en"] { display: contents; }
-    html[lang="en"] [data-lang="zh"] { display: none; }
-    html[lang="zh-Hans"] [data-lang="zh"] { display: contents; }
+    [data-lang="en"] { display: none !important; }
+    html[lang="en"] [data-lang="en"] { display: revert !important; }
+    html[lang="en"] [data-lang="zh"] { display: none !important; }
+    html[lang="zh-Hans"] [data-lang="zh"] { display: revert !important; }
+    html[lang="zh-Hans"] [data-lang="en"] { display: none !important; }
     @media (max-width: 820px) {
       .hero, .grid { grid-template-columns: 1fr; }
       header { align-items: flex-start; }
