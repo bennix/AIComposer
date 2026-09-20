@@ -48,7 +48,7 @@ struct JPEGExportSheet: View {
                     options.green = rgb.greenComponent
                     options.blue = rgb.blueComponent
                 }
-            Text("\(raster.image.width) × \(raster.image.height) px · sRGB")
+            Text(L10n.format("%d × %d px · sRGB", raster.image.width, raster.image.height))
                 .foregroundStyle(.secondary)
             HStack {
                 if let error { Text(error).foregroundStyle(.red) }

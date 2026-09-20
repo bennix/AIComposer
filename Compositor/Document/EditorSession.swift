@@ -87,7 +87,9 @@ enum NavigationTool: String, CaseIterable {
     /// Tools that draw and edit selections, sharing modifiers, moving, and nudging.
     var isSelectionTool: Bool { self == .marquee || self == .lasso || self == .wand }
     var symbol: String { self == .eyedropper ? "eyedropper" : self == .marquee ? "rectangle.dashed" : self == .lasso ? "lasso" : self == .wand ? "wand.and.stars" : self == .brush ? "paintbrush.pointed" : self == .spotHealing ? "bandage" : self == .cloneStamp ? "seal" : self == .blur ? "drop" : self == .gradient ? "square.bottomhalf.filled" : self == .shape ? "square.on.circle" : self == .crop ? "crop" : self == .move ? "arrow.up.left.and.arrow.down.right" : self == .hand ? "hand.draw" : "magnifyingglass" }
-    var label: String { self == .eyedropper ? "Eyedropper (I)" : self == .marquee ? "Marquee (M)" : self == .lasso ? "Lasso (L)" : self == .wand ? "Magic Wand (W)" : self == .brush ? "Brush (B) · Eraser (E)" : self == .spotHealing ? "Spot Healing Brush (J)" : self == .cloneStamp ? "Clone Stamp (S) · Option-click sets the source" : self == .blur ? "Smear (R)" : self == .gradient ? "Gradient (G)" : self == .shape ? "Shape (U) · Shift-U switches Rectangle/Ellipse" : self == .crop ? "Crop (C)" : self == .move ? "Move / Transform (V)" : self == .hand ? "Hand (H)" : "Zoom (Z)" }
+    var label: String {
+        L10n.t(self == .eyedropper ? "Eyedropper (I)" : self == .marquee ? "Marquee (M)" : self == .lasso ? "Lasso (L)" : self == .wand ? "Magic Wand (W)" : self == .brush ? "Brush (B) · Eraser (E)" : self == .spotHealing ? "Spot Healing Brush (J)" : self == .cloneStamp ? "Clone Stamp (S) · Option-click sets the source" : self == .blur ? "Smear (R)" : self == .gradient ? "Gradient (G)" : self == .shape ? "Shape (U) · Shift-U switches Rectangle/Ellipse" : self == .crop ? "Crop (C)" : self == .move ? "Move / Transform (V)" : self == .hand ? "Hand (H)" : "Zoom (Z)")
+    }
 }
 
 @Observable
@@ -136,7 +138,7 @@ final class EditorSession {
     private var fileRequestWaiters: [CheckedContinuation<Void, Never>] = []
     var canStartProjectOperation: Bool {
         _ = showsBusy // Re-evaluate in the UI when a long operation starts or ends.
-        return !isProjectBusy && !isImporting && brushStroke == nil && warpStroke == nil && levels == nil && !showsNewDocument && !showsImporter && renamingLayerID == nil && importError == nil && adjustmentEditingID == nil
+        return !isProjectBusy && !isImporting && !isGeneratingAI && brushStroke == nil && warpStroke == nil && levels == nil && !showsNewDocument && !showsImporter && renamingLayerID == nil && importError == nil && adjustmentEditingID == nil
     }
     func waitForFileRequest() async {
         while !canStartProjectOperation {
@@ -427,6 +429,8 @@ final class EditorSession {
     var showsImporter = false { didSet { resumeFileRequests() } }
     var isImporting = false { didSet { resumeFileRequests() } }
     var importError: String? { didSet { resumeFileRequests() } }
+    var aiSheet: AISheetKind? { didSet { resumeFileRequests() } }
+    var isGeneratingAI = false { didSet { resumeFileRequests() } }
     var opacityEditLayerID: UUID?
     var blendPreview: (layerID: UUID, mode: LayerBlendMode)?
     @ObservationIgnored var refreshCanvasPreview: (() -> Void)?
@@ -443,7 +447,7 @@ final class EditorSession {
     var isModified: Bool { history.isModified }
     var canUseHistory: Bool {
         _ = showsBusy
-        return !isProjectBusy && !isImporting && brushStroke == nil && warpStroke == nil && levels == nil && !showsNewDocument && !showsImporter && renamingLayerID == nil && importError == nil && transformEdit == nil
+        return !isProjectBusy && !isImporting && !isGeneratingAI && brushStroke == nil && warpStroke == nil && levels == nil && !showsNewDocument && !showsImporter && renamingLayerID == nil && importError == nil && transformEdit == nil
     }
     var canUndo: Bool { canUseHistory && (history.canUndo || gradientEdit != nil) }
     var canRedo: Bool { canUseHistory && history.canRedo }
@@ -473,22 +477,22 @@ final class EditorSession {
 
     /// Nestable transaction boundary; future tools can group a complete gesture.
     func beginEdit(_ name: String) {
-        history.begin(name, document: document, selection: activeLayerID)
+        history.begin(L10n.t(name), document: document, selection: activeLayerID)
     }
 
     func endEdit() { history.end(document: document, selection: activeLayerID) }
     var activeLayer: ImageLayer? { document?.layers.first { $0.id == activeLayerID } }
     var canEditLayers: Bool {
         _ = showsBusy
-        return document != nil && brushStroke == nil && warpStroke == nil && !isProjectBusy && !isImporting && !showsNewDocument && !showsImporter && renamingLayerID == nil && transformEdit == nil && cropRect == nil && gradientEdit == nil && pixelMove == nil && hueSaturation == nil && levels == nil && filterEdit == nil && adjustmentEditingID == nil
+        return document != nil && brushStroke == nil && warpStroke == nil && !isProjectBusy && !isImporting && !isGeneratingAI && !showsNewDocument && !showsImporter && renamingLayerID == nil && transformEdit == nil && cropRect == nil && gradientEdit == nil && pixelMove == nil && hueSaturation == nil && levels == nil && filterEdit == nil && adjustmentEditingID == nil
     }
 
     func addBlankLayer() {
         guard canEditLayers, let document else { return }
         let names = Set(document.layers.map(\.name))
         var number = 1
-        while names.contains("Layer \(number)") { number += 1 }
-        var layer = ImageLayer(name: "Layer \(number)", blankSize: document.size)
+        while names.contains(L10n.format("Layer %d", number)) { number += 1 }
+        var layer = ImageLayer(name: L10n.format("Layer %d", number), blankSize: document.size)
         layer.parentID = activeLayer?.isGroup == true ? activeLayerID : activeLayer?.parentID
         if let parent = layer.parentID { collapsedGroupIDs.remove(parent) }
         var insertion = document.layers.firstIndex { $0.id == activeLayerID }.map { $0 + 1 } ?? document.layers.count
@@ -668,7 +672,7 @@ final class EditorSession {
         beginEdit("New Canvas")
         defer { endEdit() }
         var document = CanvasDocument(width: width, height: height)
-        let layer = emptyLayer ? ImageLayer(name: "Layer 1", blankSize: document.size) : nil
+        let layer = emptyLayer ? ImageLayer(name: L10n.format("Layer %d", 1), blankSize: document.size) : nil
         if let layer { document.layers = [layer] }
         self.document = document
         activeLayerID = layer?.id

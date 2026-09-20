@@ -171,12 +171,13 @@ struct ContentView: View {
             if closed { filterPanel.close() }
             else {
                 filterPanel.onClose = { session.cancelFilter() }
-                filterPanel.show(title: session.filterEdit?.kind.rawValue ?? "Filter", content: FilterSheet(session: session))
+                filterPanel.show(title: session.filterEdit?.kind.displayName ?? L10n.t("Filter"), content: FilterSheet(session: session))
             }
         }
         .onChange(of: session.document == nil) { _, empty in
             if !empty { session.canvasFocusRequest += 1 }
         }
+        .modifier(AIStudioPresentation(session: session))
         .fileImporter(isPresented: $session.showsImporter,
                       allowedContentTypes: [.jpeg, .png, .heic, .tiff], allowsMultipleSelection: true) { result in
             switch result {
@@ -254,6 +255,9 @@ struct ContentView: View {
             if session.showsBusy {
                 ProgressView().controlSize(.mini)
                 Text("Working…")
+            } else if session.isGeneratingAI {
+                ProgressView().controlSize(.mini)
+                Text("Generating with AI…")
             } else if session.isImporting {
                 ProgressView().controlSize(.mini)
                 Text("Importing images…")

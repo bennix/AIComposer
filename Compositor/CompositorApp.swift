@@ -4,10 +4,13 @@ import Sparkle
 @main
 struct CompositorApp: App {
     @NSApplicationDelegateAdaptor(CompositorApplicationDelegate.self) private var applicationDelegate
+    @Bindable private var languages = AppLanguageController.shared
     private var session: EditorSession { applicationDelegate.session }
     var body: some Scene {
-        Window("Compositor", id: "editor") {
-            ProjectWorkspaceView(applicationDelegate: applicationDelegate).roundedControls()
+        Window(L10n.t("Compositor"), id: "editor") {
+            ProjectWorkspaceView(applicationDelegate: applicationDelegate)
+                .roundedControls()
+                .appLocalized()
         }
             .defaultSize(width: 1180, height: 780)
             // Files opened from Finder or dropped on the Dock icon go to the app delegate, which imports them into
@@ -25,54 +28,57 @@ struct CompositorApp: App {
                     // Dialog text fields keep native text undo; document history
                     // is unavailable while an import or modal edit is active.
                     if session.levels != nil || session.isProjectBusy || session.showsNewDocument || session.showsImporter || session.renamingLayerID != nil || session.transformEdit?.persistent == true {
-                        Button("Undo") {
+                        Button(L10n.t("Undo")) {
                             if NSApp.keyWindow?.firstResponder is NSTextView {
                                 NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
                             }
                         }
                             .keyboardShortcut("z")
-                        Button("Redo") {
+                        Button(L10n.t("Redo")) {
                             if NSApp.keyWindow?.firstResponder is NSTextView {
                                 NSApp.sendAction(Selector(("redo:")), to: nil, from: nil)
                             }
                         }
                             .keyboardShortcut("z", modifiers: [.command, .shift])
                     } else {
-                        Button(session.history.canUndo ? "Undo \(session.history.undoName)" : "Undo") { session.undo() }
+                        Button(session.history.canUndo ? L10n.format("Undo %@", session.history.undoName) : L10n.t("Undo")) { session.undo() }
                             .keyboardShortcut("z").disabled(!session.canUndo)
-                        Button(session.history.canRedo ? "Redo \(session.history.redoName)" : "Redo") { session.redo() }
+                        Button(session.history.canRedo ? L10n.format("Redo %@", session.history.redoName) : L10n.t("Redo")) { session.redo() }
                             .keyboardShortcut("z", modifiers: [.command, .shift]).disabled(!session.canRedo)
                     }
                 }
                 CommandGroup(replacing: .newItem) {
-                    Button("New Canvas…") {
+                    Button(L10n.t("New Canvas…")) {
                         applicationDelegate.showEditor?()
                         Task { await applicationDelegate.projects.newCanvas() }
                     }.keyboardShortcut("n")
                         .disabled(!applicationDelegate.projects.canStart)
-                    Button("Open Project…") {
+                    Button(L10n.t("Open Project…")) {
                         applicationDelegate.showEditor?()
                         Task { await applicationDelegate.projects.open() }
                     }
                         .keyboardShortcut("o").disabled(!applicationDelegate.projects.canStart)
-                    Button("Import Images…") { session.showsImporter = true }
+                    Button(L10n.t("Import Images…")) { session.showsImporter = true }
                         .disabled(session.levels != nil || session.showsBusy || session.isImporting || session.showsNewDocument)
+                    Button(L10n.t("Generate Image…")) { session.openAI(.generate) }
+                        .keyboardShortcut("g", modifiers: [.command, .option, .shift])
+                        .disabled(!session.canOpenAIGenerate)
                 }
                 CommandGroup(replacing: .saveItem) {
-                    Button("Save") { Task { await applicationDelegate.projects.save() } }
+                    Button(L10n.t("Save")) { Task { await applicationDelegate.projects.save() } }
                         .keyboardShortcut("s").disabled(session.document == nil || !applicationDelegate.projects.canStart)
-                    Button("Save As…") { Task { await applicationDelegate.projects.save(asNew: true) } }
+                    Button(L10n.t("Save As…")) { Task { await applicationDelegate.projects.save(asNew: true) } }
                         .keyboardShortcut("s", modifiers: [.command, .shift])
                         .disabled(session.document == nil || !applicationDelegate.projects.canStart)
                     Divider()
-                    Button("Export PNG…") { Task { await applicationDelegate.projects.exportPNG() } }
+                    Button(L10n.t("Export PNG…")) { Task { await applicationDelegate.projects.exportPNG() } }
                         .keyboardShortcut("e", modifiers: [.command, .shift])
                         .disabled(session.document == nil || !applicationDelegate.projects.canStart)
-                    Button("Export JPEG…") { Task { await applicationDelegate.projects.exportJPEG() } }
+                    Button(L10n.t("Export JPEG…")) { Task { await applicationDelegate.projects.exportJPEG() } }
                         .keyboardShortcut("s", modifiers: [.command, .option, .shift])
                         .disabled(session.document == nil || !applicationDelegate.projects.canStart)
                     Divider()
-                    Button("Close Project") {
+                    Button(L10n.t("Close Project")) {
                         if let window = applicationDelegate.projects.window {
                             Task { await applicationDelegate.projects.close(window) }
                         }
@@ -81,28 +87,28 @@ struct CompositorApp: App {
                 // Grouped: a commands builder takes at most ten items.
                 Group {
                     CommandGroup(after: .appInfo) {
-                        Button("Check for Updates…") { applicationDelegate.updater.checkForUpdates(nil) }
+                        Button(L10n.t("Check for Updates…")) { applicationDelegate.updater.checkForUpdates(nil) }
                     }
                     CommandGroup(after: .toolbar) {
-                        Button("Fit Canvas") { session.fit() }.keyboardShortcut("0").disabled(session.document == nil)
-                        Button("Actual Pixels") { session.zoom(to: 1) }.keyboardShortcut("1").disabled(session.document == nil)
-                        Button("Zoom In") { session.zoom(to: session.viewport.zoom * 1.25) }
+                        Button(L10n.t("Fit Canvas")) { session.fit() }.keyboardShortcut("0").disabled(session.document == nil)
+                        Button(L10n.t("Actual Pixels")) { session.zoom(to: 1) }.keyboardShortcut("1").disabled(session.document == nil)
+                        Button(L10n.t("Zoom In")) { session.zoom(to: session.viewport.zoom * 1.25) }
                             .keyboardShortcut("=").disabled(session.document == nil)
-                        Button("Zoom Out") { session.zoom(to: session.viewport.zoom / 1.25) }
+                        Button(L10n.t("Zoom Out")) { session.zoom(to: session.viewport.zoom / 1.25) }
                             .keyboardShortcut("-").disabled(session.document == nil)
-                        Toggle("Pixel Grid (800% and above)", isOn: Binding(get: { session.showsPixelGrid },
+                        Toggle(L10n.t("Pixel Grid (800% and above)"), isOn: Binding(get: { session.showsPixelGrid },
                                                                               set: { session.showsPixelGrid = $0 }))
-                        Toggle("Show Transform Controls", isOn: Binding(get: { session.showsTransformControls },
+                        Toggle(L10n.t("Show Transform Controls"), isOn: Binding(get: { session.showsTransformControls },
                                                                           set: { session.showsTransformControls = $0 }))
                             .keyboardShortcut("h").disabled(session.tool != .move || session.document == nil)
                     }
                     // ⌘H toggles the Move tool's transform controls instead of hiding the app, so Hide keeps its
                     // place in the app menu without the shortcut.
                     CommandGroup(replacing: .appVisibility) {
-                        Button("Hide Compositor") { NSApp.hide(nil) }
-                        Button("Hide Others") { NSApp.hideOtherApplications(nil) }
+                        Button(L10n.t("Hide Compositor")) { NSApp.hide(nil) }
+                        Button(L10n.t("Hide Others")) { NSApp.hideOtherApplications(nil) }
                             .keyboardShortcut("h", modifiers: [.command, .option])
-                        Button("Show All") { NSApp.unhideAllApplications(nil) }
+                        Button(L10n.t("Show All")) { NSApp.unhideAllApplications(nil) }
                     }
                 }
                 CommandGroup(replacing: .pasteboard) {
@@ -110,21 +116,21 @@ struct CompositorApp: App {
                     // Cut, Copy and Paste check when chosen rather than through .disabled: what they depend on
                     // (the pasteboard, the copied pixels, the busy flag) isn't observed, so a disabled state could
                     // go stale — the first Paste after a Copy used to beep until something else refreshed the menu.
-                    Button("Cut") {
+                    Button(L10n.t("Cut")) {
                         if NSApp.keyWindow?.firstResponder is NSTextView { NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil) }
                         else if session.selection != nil, session.canCopyPixels { Task { await session.cutSelection() } }
                         else { NSSound.beep() }
                     }
                         .keyboardShortcut("x")
-                    Button("Copy") {
+                    Button(L10n.t("Copy")) {
                         if NSApp.keyWindow?.firstResponder is NSTextView { NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil) }
                         else if session.canCopyPixels { session.copySelection() }
                         else { NSSound.beep() }
                     }
                         .keyboardShortcut("c")
-                    Button("Copy Merged") { session.copyMergedSelection() }
+                    Button(L10n.t("Copy Merged")) { session.copyMergedSelection() }
                         .keyboardShortcut("c", modifiers: [.command, .shift]).disabled(!session.canCopyMerged)
-                    Button("Paste") {
+                    Button(L10n.t("Paste")) {
                         if NSApp.keyWindow?.firstResponder is NSTextView { NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil) }
                         else if session.canPaste { session.paste() }
                         else { NSSound.beep() }
@@ -134,137 +140,157 @@ struct CompositorApp: App {
                 CommandGroup(after: .pasteboard) {
                     Divider()
                     // Photoshop's fill shortcuts; in a text field they keep their text meaning.
-                    Button("Fill with Foreground Color") {
+                    Button(L10n.t("Fill with Foreground Color")) {
                         if NSApp.keyWindow?.firstResponder is NSTextView {
                             NSApp.sendAction(#selector(NSResponder.deleteWordBackward(_:)), to: nil, from: nil)
                         } else { Task { await session.fillSelection(with: .foreground) } }
                     }
                         .keyboardShortcut(.delete, modifiers: .option).disabled(!session.canEditPixels)
-                    Button("Fill with Background Color") {
+                    Button(L10n.t("Fill with Background Color")) {
                         if NSApp.keyWindow?.firstResponder is NSTextView {
                             NSApp.sendAction(#selector(NSResponder.deleteToBeginningOfLine(_:)), to: nil, from: nil)
                         } else { Task { await session.fillSelection(with: .background) } }
                     }
                         .keyboardShortcut(.delete, modifiers: .command).disabled(!session.canEditPixels)
-                    Button("Clear Selection Pixels") { Task { await session.clearSelectedPixels() } }
+                    Button(L10n.t("Clear Selection Pixels")) { Task { await session.clearSelectedPixels() } }
                         .disabled(session.selection == nil || !session.canEditPixels)
-                    Button("Content-Aware Fill…") { session.beginFilter(.contentAwareFill) }
+                    Button(L10n.t("Content-Aware Fill…")) { session.beginFilter(.contentAwareFill) }
                         .keyboardShortcut(.delete, modifiers: .shift).disabled(!session.canContentAwareFill)
                 }
-                CommandMenu("Select") {
+                CommandMenu(L10n.t("Select")) {
                     // Text fields keep their own Select All.
-                    Button("All") {
+                    Button(L10n.t("All")) {
                         if NSApp.keyWindow?.firstResponder is NSTextView {
                             NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
                         } else { session.selectAll() }
                     }
                         .keyboardShortcut("a").disabled(session.document == nil)
-                    Button("Deselect") { session.deselect() }
+                    Button(L10n.t("Deselect")) { session.deselect() }
                         .keyboardShortcut("d").disabled(session.selection == nil || !session.canEditSelection)
-                    Button("Inverse") { session.invertSelection() }
+                    Button(L10n.t("Inverse")) { session.invertSelection() }
                         .keyboardShortcut("i", modifiers: [.command, .shift])
                         .disabled(session.selection == nil || !session.canEditSelection)
-                    Button("Layer's Pixels") {
+                    Button(L10n.t("Layer's Pixels")) {
                         if let id = session.activeLayerID { session.loadLayerSelection(layerID: id) }
                     }
                         .disabled(session.activeLayer?.asset == nil || !session.canEditSelection)
-                    Button("Mask's Black Areas") {
+                    Button(L10n.t("Mask's Black Areas")) {
                         if let id = session.activeLayerID { session.loadMaskSelection(layerID: id) }
                     }
                         .disabled(session.activeLayer?.mask == nil || !session.canEditSelection)
                     Divider()
-                    Button("Expand by \(session.selectionExpandAmount) px") { session.expandSelection(by: session.selectionExpandAmount) }
+                    Button(L10n.format("Expand by %@ px", "\(session.selectionExpandAmount)")) { session.expandSelection(by: session.selectionExpandAmount) }
                         .disabled(!session.canModifySelection)
-                    Button("Contract by \(session.selectionContractAmount) px") { session.contractSelection(by: session.selectionContractAmount) }
+                    Button(L10n.format("Contract by %@ px", "\(session.selectionContractAmount)")) { session.contractSelection(by: session.selectionContractAmount) }
                         .disabled(!session.canModifySelection)
                 }
-                CommandMenu("Image") {
-                    Button("Curves…") { session.beginFilter(.curves) }
+                CommandMenu(L10n.t("Image")) {
+                    Button(L10n.t("Curves…")) { session.beginFilter(.curves) }
                         .keyboardShortcut("m").disabled(!session.canAdjustColors || session.hueSaturation != nil)
-                    Button("Levels…") { session.beginLevels() }
+                    Button(L10n.t("Levels…")) { session.beginLevels() }
                         .keyboardShortcut("l").disabled(!session.canAdjustColors || session.hueSaturation != nil)
-                    Button("Hue/Saturation…") { session.beginHueSaturation() }
+                    Button(L10n.t("Hue/Saturation…")) { session.beginHueSaturation() }
                         .keyboardShortcut("u").disabled(!session.canAdjustColors)
                     ForEach([FilterKind.exposure, .gradientMap, .grain], id: \.self) { kind in
-                        Button("\(kind.rawValue)…") { session.beginFilter(kind) }
+                        Button("\(kind.displayName)…") { session.beginFilter(kind) }
                             .disabled(!session.canAdjustColors || session.hueSaturation != nil)
                     }
-                    Button(session.isMaskSelected ? "Invert Mask" : "Invert") { Task { await session.invertPixels() } }
+                    Button(session.isMaskSelected ? L10n.t("Invert Mask") : L10n.t("Invert")) { Task { await session.invertPixels() } }
                         .keyboardShortcut("i")
                         .disabled(!session.canInvert)
                     Divider()
-                    Button("Canvas Size…") { Task { await applicationDelegate.projects.canvasSize() } }
+                    Button(L10n.t("Canvas Size…")) { Task { await applicationDelegate.projects.canvasSize() } }
                         .keyboardShortcut("c", modifiers: [.command, .option])
                         .disabled(session.document == nil || !applicationDelegate.projects.canStart)
-                    Button("Image Size…") { Task { await applicationDelegate.projects.imageSize() } }
+                    Button(L10n.t("Image Size…")) { Task { await applicationDelegate.projects.imageSize() } }
                         .keyboardShortcut("i", modifiers: [.command, .option])
                         .disabled(session.document == nil || !applicationDelegate.projects.canStart)
                     Group {
                         Divider()
-                        Button("Flip Canvas Horizontal") { session.flipCanvas(horizontally: true) }
+                        Button(L10n.t("Flip Canvas Horizontal")) { session.flipCanvas(horizontally: true) }
                             .disabled(!session.canEditLayers)
-                        Button("Flip Canvas Vertical") { session.flipCanvas(horizontally: false) }
+                        Button(L10n.t("Flip Canvas Vertical")) { session.flipCanvas(horizontally: false) }
                             .disabled(!session.canEditLayers)
                     }
                 }
-                CommandMenu("Filter") {
+                CommandMenu(L10n.t("AI")) {
+                    ForEach(AIMenuGroup.allCases, id: \.rawValue) { group in
+                        Menu(L10n.t(group.rawValue)) {
+                            ForEach(AISheetKind.inGroup(group)) { kind in
+                                Button("\(kind.title)…") { session.openAI(kind) }
+                                    .disabled(!session.canOpen(kind))
+                            }
+                        }
+                    }
+                    Divider()
+                    Button(L10n.t("AI Settings…")) {
+                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                    }
+                }
+                CommandMenu(L10n.t("Filter")) {
                     ForEach(FilterKind.allCases.filter { $0 != .contentAwareFill && !$0.isImageAdjustment }, id: \.self) { kind in
-                        Button("\(kind.rawValue)…") { session.beginFilter(kind) }
+                        Button("\(kind.displayName)…") { session.beginFilter(kind) }
                             .disabled(!session.canAdjustColors || session.hueSaturation != nil)
                     }
                 }
-                CommandMenu("Layer") {
-                    Menu("New Adjustment Layer") {
+                CommandMenu(L10n.t("Layer")) {
+                    Menu(L10n.t("New Adjustment Layer")) {
                         ForEach(AdjustmentKind.allCases, id: \.self) { kind in
-                            Button(kind.rawValue + "…") { session.addAdjustment(kind) }
+                            Button(kind.displayName + "…") { session.addAdjustment(kind) }
                         }
                     }.disabled(!session.canEditLayers || session.document == nil)
-                    Button("Edit Adjustment…") {
+                    Button(L10n.t("Edit Adjustment…")) {
                         session.adjustmentEditingID = session.activeLayerID
                     }.disabled(!session.canEditLayers || session.activeLayer?.adjustment == nil)
                     Divider()
-                    Button(session.canTransformSelection ? "Transform Selection" : "Transform Layer") { session.transformCommand() }
+                    Button(session.canTransformSelection ? L10n.t("Transform Selection") : L10n.t("Transform Layer")) { session.transformCommand() }
                         .keyboardShortcut("t").disabled(!session.canTransform && !session.canTransformSelection)
-                    Button(session.selection == nil ? "Duplicate Layer" : "Layer via Copy") { session.layerViaCopy() }
+                    Button(session.selection == nil ? L10n.t("Duplicate Layer") : L10n.t("Layer via Copy")) { session.layerViaCopy() }
                         .keyboardShortcut("j").disabled(!session.canCopyPixels && !(session.selection == nil && session.canEditLayers && session.activeLayer?.isGroup == false))
                     Divider()
-                    Button(session.activeLayer?.maskSourceID == nil ? "Create Clipping Mask" : "Release Clipping Mask") {
+                    Button(session.activeLayer?.maskSourceID == nil ? L10n.t("Create Clipping Mask") : L10n.t("Release Clipping Mask")) {
                         if let id = session.activeLayerID { session.toggleClippingMask(id) }
                     }
                     .keyboardShortcut("g", modifiers: [.command, .option])
                     .disabled(session.activeLayerID.map { !session.canToggleClippingMask($0) } ?? true)
                     Divider()
-                    Button("Group Selected Layers") { session.groupSelectedLayers() }
+                    Button(L10n.t("Group Selected Layers")) { session.groupSelectedLayers() }
                         .keyboardShortcut("g").disabled(!session.canEditLayers)
-                    Button("Move Out of Folder") { session.moveActiveLayerOutOfGroup() }
+                    Button(L10n.t("Move Out of Folder")) { session.moveActiveLayerOutOfGroup() }
                         .disabled(!session.canEditLayers || session.activeLayer?.parentID == nil)
-                    Button("New Blank Layer") { session.addBlankLayer() }
+                    Button(L10n.t("New Blank Layer")) { session.addBlankLayer() }
                         .keyboardShortcut("n", modifiers: [.command, .shift]).disabled(!session.canEditLayers)
-                    Button("Rename Layer…") { session.renamingLayerID = session.activeLayerID }
+                    Button(L10n.t("Rename Layer…")) { session.renamingLayerID = session.activeLayerID }
                         .disabled(!session.canEditLayers || session.activeLayer == nil)
-                    Button(session.activeLayer?.isVisible == false ? "Show Layer" : "Hide Layer") {
+                    Button(session.activeLayer?.isVisible == false ? L10n.t("Show Layer") : L10n.t("Hide Layer")) {
                         if let id = session.activeLayerID { session.toggleLayerVisibility(id) }
                     }.disabled(!session.canEditLayers || session.activeLayer == nil)
                     Divider()
-                    Button("Move Layer Up") { session.moveActiveLayer(by: 1) }
+                    Button(L10n.t("Move Layer Up")) { session.moveActiveLayer(by: 1) }
                         .keyboardShortcut("]").disabled(!session.canMoveActiveLayer(by: 1))
-                    Button("Move Layer Down") { session.moveActiveLayer(by: -1) }
+                    Button(L10n.t("Move Layer Down")) { session.moveActiveLayer(by: -1) }
                         .keyboardShortcut("[").disabled(!session.canMoveActiveLayer(by: -1))
                     Group {
                         Button(session.mergeTitle) { session.mergeLayers() }
                             .keyboardShortcut("e").disabled(!session.canMergeLayers)
                         Divider()
-                        Button("Flip Layer Horizontal") { session.flipLayers(horizontally: true) }
+                        Button(L10n.t("Flip Layer Horizontal")) { session.flipLayers(horizontally: true) }
                             .disabled(!session.canTransform)
-                        Button("Flip Layer Vertical") { session.flipLayers(horizontally: false) }
+                        Button(L10n.t("Flip Layer Vertical")) { session.flipLayers(horizontally: false) }
                             .disabled(!session.canTransform)
                     }
                     Divider()
-                    Button(session.isMaskSelected && session.activeLayer?.mask != nil ? "Delete Layer Mask" : session.selectedLayerIDs.count > 1 ? "Delete Layers" : "Delete Layer") {
+                    Button(session.isMaskSelected && session.activeLayer?.mask != nil ? L10n.t("Delete Layer Mask") : session.selectedLayerIDs.count > 1 ? L10n.t("Delete Layers") : L10n.t("Delete Layer")) {
                         session.deleteLayerOrMask()
                     }
                         .disabled(!session.canEditLayers || session.activeLayer == nil)
                 }
             }
+        Settings {
+            AISettingsView()
+                .roundedControls()
+                .preferredColorScheme(.dark)
+                .appLocalized()
+        }
     }
 }

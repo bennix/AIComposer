@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIComposer — AI-native image editor for Mac</title>
+  <meta name="description" content="AIComposer is an AI-enhanced fork of Compositor. Generate and edit images on the Mac with ZenMux-backed models.">
+  <link rel="icon" href="./favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="./icon.png">
+  <style>
+    :root {
+      --bg: #12110e;
+      --ink: #f3ece0;
+      --muted: #b6ad9c;
+      --line: rgba(243, 236, 224, 0.12);
+      --card: #1b1914;
+      --accent: #d9a441;
+      --accent-ink: #1a1408;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+    body {
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", "Source Han Serif SC", serif;
+      line-height: 1.55;
+    }
+    a { color: inherit; }
+    .wrap { width: min(1080px, calc(100% - 40px)); margin: 0 auto; }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 0 18px; border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .brand img { width: 42px; height: 42px; border-radius: 10px; }
+    .brand strong { display: block; font-size: 1.15rem; letter-spacing: 0.02em; }
+    .brand span { display: block; color: var(--muted); font-size: 0.78rem; }
+    nav { display: flex; gap: 10px; align-items: center; }
+    .lang {
+      border: 1px solid var(--line); background: transparent; color: var(--ink);
+      border-radius: 999px; padding: 6px 12px; cursor: pointer; font: inherit;
+    }
+    .lang[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+    .hero { padding: 72px 0 36px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 48px; align-items: end; }
+    .kicker { color: var(--accent); letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.78rem; font-family: ui-sans-serif, system-ui, sans-serif; }
+    h1 { font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: 1.05; margin: 12px 0 18px; font-weight: 600; }
+    .lead { color: var(--muted); font-size: 1.15rem; max-width: 38rem; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 46px; padding: 0 18px; border-radius: 999px; text-decoration: none;
+      font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.95rem;
+    }
+    .btn.primary { background: var(--accent); color: var(--accent-ink); font-weight: 650; }
+    .btn.ghost { border: 1px solid var(--line); }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-top: 16px; }
+    .card {
+      background: linear-gradient(180deg, #242017, var(--card));
+      border: 1px solid var(--line); border-radius: 22px; padding: 26px;
+    }
+    .card h2 { margin: 0 0 10px; font-size: 1.3rem; }
+    .card p { margin: 0; color: var(--muted); }
+    section { padding: 28px 0 8px; }
+    h2 { font-size: 1.7rem; margin: 0 0 16px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .tile { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+    .tile h3 { margin: 0 0 8px; font-size: 1.05rem; }
+    .tile p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    .origin {
+      margin: 36px 0 20px; padding: 22px 24px;
+      border-left: 3px solid var(--accent); background: #191712;
+    }
+    footer {
+      border-top: 1px solid var(--line); margin-top: 48px; padding: 22px 0 40px;
+      color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.85rem;
+    }
+    [data-lang="en"] { display: none; }
+    html[lang="en"] [data-lang="en"] { display: contents; }
+    html[lang="en"] [data-lang="zh"] { display: none; }
+    html[lang="zh-Hans"] [data-lang="zh"] { display: contents; }
+    @media (max-width: 820px) {
+      .hero, .grid { grid-template-columns: 1fr; }
+      header { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="./">
+        <img src="./icon.png" alt="AIComposer">
+        <div>
+          <strong>AIComposer</strong>
+          <span data-lang="zh">源自 Compositor 的 AI 图像编辑器</span>
+          <span data-lang="en">An AI-enhanced fork of Compositor</span>
+        </div>
+      </a>
+      <nav>
+        <button class="lang" id="btn-zh" type="button" aria-pressed="true">中文</button>
+        <button class="lang" id="btn-en" type="button" aria-pressed="false">EN</button>
+      </nav>
+    </header>
+
+    <div class="hero">
+      <div>
+        <div class="kicker">macOS · ZenMux · Open Source</div>
+        <h1 data-lang="zh">在图层上生图、改图，而不是另开一个 AI 网站。</h1>
+        <h1 data-lang="en">Generate and edit images on the layer you already have.</h1>
+        <p class="lead" data-lang="zh">AIComposer 基于开源 Photoshop 风格编辑器 Compositor，加上 ZenMux 支持的 AI 生图与改图：选区填充、去物体、扩图、换天空，以及原有的图层、蒙版与修饰工具。</p>
+        <p class="lead" data-lang="en">AIComposer starts from the open-source Photoshop-style editor Compositor, then adds ZenMux-backed generation and editing: selection fill, object removal, expand, sky replacement, plus the original layers, masks, and retouching tools.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/bennix/AIComposer/releases/latest">
+            <span data-lang="zh">下载公证 DMG</span>
+            <span data-lang="en">Download notarized DMG</span>
+          </a>
+          <a class="btn ghost" href="https://github.com/bennix/AIComposer">GitHub</a>
+        </div>
+        <p class="meta" data-lang="zh">macOS 26 · Developer ID 签名并公证 · 当前版本 1.0.5</p>
+        <p class="meta" data-lang="en">macOS 26 · Developer ID signed and notarized · Current version 1.0.5</p>
+      </div>
+      <aside class="card">
+        <h2 data-lang="zh">ZenMux 接入</h2>
+        <h2 data-lang="en">ZenMux inside the app</h2>
+        <p data-lang="zh">在设置里填入 ZenMux API Key（加密保存在本机）。可选 GPT Image、Qwen Image、Gemini Image。没有 Key 时可用邀请链接注册。密钥不会进仓库。</p>
+        <p data-lang="en">Paste a ZenMux API key in Settings. It is encrypted on this Mac. Choose GPT Image, Qwen Image, or Gemini Image. Invite links work when you do not have a key yet. Keys never enter the repository.</p>
+      </aside>
+    </div>
+
+    <section>
+      <h2 data-lang="zh">AI 强化了什么</h2>
+      <h2 data-lang="en">What the AI layer adds</h2>
+      <div class="grid">
+        <article class="tile">
+          <h3 data-lang="zh">生图</h3>
+          <h3 data-lang="en">Generate</h3>
+          <p data-lang="zh">按提示词新建图层：静物、纹理、海报、变体。</p>
+          <p data-lang="en">Create a new layer from a prompt: still life, texture, poster, or variation.</p>
+        </article>
+        <article class="tile">
+          <h3 data-lang="zh">选区改图</h3>
+          <h3 data-lang="en">Edit a selection</h3>
+          <p data-lang="zh">填充、去物体、去字迹。原图、选区蒙版和提示词一并送给模型，结果写回当前图层。</p>
+          <p data-lang="en">Fill, remove objects, or clear handwriting. The photo, selection mask, and prompt go out together; the result writes back to the current layer.</p>
+        </article>
+        <article class="tile">
+          <h3 data-lang="zh">扩图与换天空</h3>
+          <h3 data-lang="en">Expand and sky</h3>
+          <p data-lang="zh">生成式扩图、替换天空、风格重绘。会处理接缝、黑边和画幅，避免图被越改越小。</p>
+          <p data-lang="en">Generative expand, sky replacement, and restyle. Seams, letterboxing, and shrinking frames are handled in the pipeline.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2 data-lang="zh">仍然是一台完整的图像编辑器</h2>
+      <h2 data-lang="en">Still a full image editor</h2>
+      <div class="grid">
+        <article class="tile">
+          <h3 data-lang="zh">图层与蒙版</h3>
+          <h3 data-lang="en">Layers and masks</h3>
+          <p data-lang="zh">文件夹、混合模式、不透明度、图层蒙版、剪贴蒙版、调整图层。</p>
+          <p data-lang="en">Folders, blend modes, opacity, layer masks, clipping masks, and adjustment layers.</p>
+        </article>
+        <article class="tile">
+          <h3 data-lang="zh">修饰与变换</h3>
+          <h3 data-lang="en">Retouch and transform</h3>
+          <p data-lang="zh">画笔、修复、仿制、套索、魔棒、扭曲、裁剪，以及色阶/曲线/色相饱和度。</p>
+          <p data-lang="en">Brush, healing, clone, lasso, magic wand, distort, crop, plus Levels, Curves, and Hue/Saturation.</p>
+        </article>
+        <article class="tile">
+          <h3 data-lang="zh">五种界面语言</h3>
+          <h3 data-lang="en">Five UI languages</h3>
+          <p data-lang="zh">简体中文、英文、日文、繁体中文、韩文，菜单和 AI 提示词一并切换。</p>
+          <p data-lang="en">Simplified Chinese, English, Japanese, Traditional Chinese, and Korean, including AI prompts.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="origin">
+      <p data-lang="zh"><strong>源自 Compositor。</strong> 本项目 fork 并修改自 <a href="https://github.com/robbietilton/Compositor">robbietilton/Compositor</a>（MIT）。原作者做了一台免费、开源、面向合成与后期的 Mac 图像编辑器。AIComposer 在此之上加入 ZenMux 生图/改图，并保持原项目的图层工作流。请同时尊重上游许可证与致谢。</p>
+      <p data-lang="en"><strong>Based on Compositor.</strong> This project is a fork of <a href="https://github.com/robbietilton/Compositor">robbietilton/Compositor</a> (MIT). The original app is a free, open-source Mac editor for compositing and finishing. AIComposer adds ZenMux generation and editing on that layer workflow. Please keep the upstream license and credit.</p>
+    </div>
+
+    <footer>
+      <div>
+        <div data-lang="zh">© 2026 AIComposer · 基于 Wonder Assembly LLC 的 Compositor</div>
+        <div data-lang="en">© 2026 AIComposer · Based on Compositor by Wonder Assembly LLC</div>
+      </div>
+      <div>
+        <a href="https://zenmux.ai">ZenMux</a>
+        ·
+        <a href="https://github.com/bennix/AIComposer">bennix/AIComposer</a>
+      </div>
+    </footer>
+  </div>
+  <script>
+    const root = document.documentElement;
+    const buttons = { zh: document.getElementById("btn-zh"), en: document.getElementById("btn-en") };
+    function setLang(lang) {
+      root.lang = lang === "en" ? "en" : "zh-Hans";
+      buttons.zh.setAttribute("aria-pressed", lang !== "en");
+      buttons.en.setAttribute("aria-pressed", lang === "en");
+      localStorage.setItem("aic-lang", lang);
+    }
+    buttons.zh.addEventListener("click", () => setLang("zh"));
+    buttons.en.addEventListener("click", () => setLang("en"));
+    const start = localStorage.getItem("aic-lang") || (navigator.language.startsWith("zh") ? "zh" : "en");
+    setLang(start);
+  </script>
+</body>
+</html>

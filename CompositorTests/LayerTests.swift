@@ -2,6 +2,18 @@ import AppKit
 import Testing
 @testable import Compositor
 
+extension NativeLayerList.Coordinator {
+    @discardableResult
+    func moveLayer(_ id: UUID, to row: Int) -> Bool {
+        guard session.canEditLayers, let layers = session.document?.layers else { return false }
+        let display = Array(layers.reversed())
+        guard let from = display.firstIndex(where: { $0.id == id }) else { return false }
+        guard (0...display.count).contains(row) else { return false }
+        session.reorderLayers(from: IndexSet(integer: from), to: row)
+        return true
+    }
+}
+
 @MainActor
 struct LayerTests {
     private func sessionWithThreeLayers() -> EditorSession {

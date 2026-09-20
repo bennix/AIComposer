@@ -23,12 +23,12 @@ final class FloatingPanelController: NSObject, NSWindowDelegate {
         let panel = self.panel ?? makePanel()
         let wasVisible = panel.isVisible
         let topLeft = NSPoint(x: panel.frame.minX, y: panel.frame.maxY)
-        panel.title = title
+        panel.title = L10n.t(title)
         // A hosting *view* sized once, not a controller with `.preferredContentSize`:
         // that option makes AppKit measure the SwiftUI view during its constraint pass,
         // and SwiftUI's measurement invalidates layout re-entrantly, which AppKit treats
         // as a fatal exception.
-        let host = NSHostingView(rootView: AnyView(content.roundedControls()))
+        let host = NSHostingView(rootView: AnyView(content.roundedControls().appLocalized()))
         let size = host.fittingSize
         panel.contentView = host
         if size.width > 0, size.height > 0 { panel.setContentSize(size) }

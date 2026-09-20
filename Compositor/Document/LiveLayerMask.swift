@@ -106,11 +106,11 @@ extension EditorSession {
         let targets = (document?.layers ?? []).filter { !removed.contains($0.id) && $0.maskSourceID.map(removed.contains) == true }.map(\.id)
         guard !targets.isEmpty else { return false }
         let alert = NSAlert()
-        alert.messageText = ids.count == 1 ? "This layer supplies a live mask" : "These layers supply live masks"
-        alert.informativeText = "Bake keeps the current masked appearance in the dependent layers’ pixels. Remove Links reveals their pixels. You can undo either choice."
-        alert.addButton(withTitle: "Bake and Delete")
-        alert.addButton(withTitle: "Cancel")
-        alert.addButton(withTitle: "Remove Links and Delete")
+        alert.messageText = ids.count == 1 ? L10n.t("This layer supplies a live mask") : L10n.t("These layers supply live masks")
+        alert.informativeText = L10n.t("Bake keeps the current masked appearance in the dependent layers’ pixels. Remove Links reveals their pixels. You can undo either choice.")
+        alert.addButton(withTitle: L10n.t("Bake and Delete"))
+        alert.addButton(withTitle: L10n.t("Cancel"))
+        alert.addButton(withTitle: L10n.t("Remove Links and Delete"))
         let response = alert.runModal()
         if response == .alertThirdButtonReturn { finishDeletingLayers(ids, baked: [:]); return true }
         guard response == .alertFirstButtonReturn, let snapshot = projectSnapshot() else { return true }

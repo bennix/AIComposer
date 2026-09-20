@@ -515,7 +515,8 @@ private final class LayerCell: NSTableCellView, NSTextFieldDelegate {
                                 ("Add White Mask", #selector(addWhiteMask)), ("Add Black Mask", #selector(addBlackMask)),
                                 ("Enable/Disable Mask", #selector(toggleMask)), ("Delete Mask", #selector(deleteMask)), ("Release Clipping Mask", #selector(removeLiveMask)),
                                 ("Move Out of Folder", #selector(moveOut)), ("Delete Layer / Folder", #selector(deleteLayer))] {
-            let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+            let item = NSMenuItem(title: L10n.t(title), action: action, keyEquivalent: "")
+            item.representedObject = title
             item.target = self
             menu.addItem(item)
         }
@@ -529,7 +530,12 @@ private final class LayerCell: NSTableCellView, NSTextFieldDelegate {
         indentation.constant = CGFloat(min(depth, 8)) * 24 + (layer.maskSourceID == nil ? 0 : 24)
         disclosure.isHidden = !layer.isGroup
         disclosure.isEnabled = enabled
-        disclosure.image = NSImage(systemSymbolName: session.collapsedGroupIDs.contains(layer.id) ? "chevron.right" : "chevron.down", accessibilityDescription: "Expand or collapse folder")
+        if let menu {
+            for item in menu.items {
+                if let key = item.representedObject as? String { item.title = L10n.t(key) }
+            }
+        }
+        disclosure.image = NSImage(systemSymbolName: session.collapsedGroupIDs.contains(layer.id) ? "chevron.right" : "chevron.down", accessibilityDescription: L10n.t("Expand or collapse folder"))
         // Pixel layers and masks show the whole canvas with their pixels where they sit, as Photoshop does;
         // adjustments and folders keep a square icon. Pictures redraw only when what they show changes.
         let canvas = session.document?.size ?? CGSize(width: 1, height: 1)
@@ -539,7 +545,7 @@ private final class LayerCell: NSTableCellView, NSTextFieldDelegate {
         thumbnailHeight.constant = layerSize.height
         let key = ThumbnailKey(image: layer.asset.map { ObjectIdentifier($0.thumbnail) }, transform: layer.transform, canvas: canvas)
         if layerID != layer.id || thumbnailKey != key {
-            thumbnail.image = layer.adjustment.map { Self.adjustmentIcon($0.kind.symbol, description: $0.kind.rawValue, quarterTurnClockwise: $0.kind == .curves) }
+            thumbnail.image = layer.adjustment.map { Self.adjustmentIcon($0.kind.symbol, description: $0.kind.displayName, quarterTurnClockwise: $0.kind == .curves) }
                 ?? (layer.isGroup ? Self.folderIcon
                     : CanvasThumbnail.layer(layer.asset?.thumbnail, transform: layer.transform, canvas: canvas, box: 36))
             thumbnailKey = key
@@ -564,26 +570,26 @@ private final class LayerCell: NSTableCellView, NSTextFieldDelegate {
         linkButton.isHidden = !linkable
         linkButton.image = layer.mask?.isLinked == false ? nil : Self.linkImage
         linkButton.isEnabled = thumbnail.isEnabled
-        linkButton.toolTip = layer.mask?.isLinked == false ? "Link layer and mask so they move together"
-            : "Unlink layer and mask to move or transform them separately"
-        linkButton.setAccessibilityLabel(layer.mask?.isLinked == false ? "Link mask: \(layer.name)" : "Unlink mask: \(layer.name)")
-        thumbnail.toolTip = "Select image pixels"
-        maskThumbnail.toolTip = "Select layer mask; Shift-click to enable/disable; Cmd-click to select its black areas (Cmd-Shift adds, Cmd-Option subtracts)"
-        thumbnail.setAccessibilityLabel("Select image: \(layer.name)")
-        maskThumbnail.setAccessibilityLabel("Select mask: \(layer.name)")
+        linkButton.toolTip = layer.mask?.isLinked == false ? L10n.t("Link layer and mask so they move together")
+            : L10n.t("Unlink layer and mask to move or transform them separately")
+        linkButton.setAccessibilityLabel(layer.mask?.isLinked == false ? L10n.format("Link mask: %@", layer.name) : L10n.format("Unlink mask: %@", layer.name))
+        thumbnail.toolTip = L10n.t("Select image pixels")
+        maskThumbnail.toolTip = L10n.t("Select layer mask; Shift-click to enable/disable; Cmd-click to select its black areas (Cmd-Shift adds, Cmd-Option subtracts)")
+        thumbnail.setAccessibilityLabel(L10n.format("Select image: %@", layer.name))
+        maskThumbnail.setAccessibilityLabel(L10n.format("Select mask: %@", layer.name))
         updateTarget()
         layerName = layer.name
         // A reused cell must not carry another row's half-finished rename.
         if renaming, layerID != layer.id { restoreLabel() }
         if !renaming { nameLabel.stringValue = (layer.maskSourceID == nil ? "" : "↳ ") + layer.name }
-        dimensions.stringValue = layer.adjustment != nil ? "Adjustment · Double-click to edit" : layer.isGroup ? "Folder" : "\(Int(layer.size.width.rounded())) × \(Int(layer.size.height.rounded())) px"
+        dimensions.stringValue = layer.adjustment != nil ? L10n.t("Adjustment · Double-click to edit") : layer.isGroup ? L10n.t("Folder") : L10n.format("%d × %d px", Int(layer.size.width.rounded()), Int(layer.size.height.rounded()))
         if let source = layer.maskSourceID {
-            let sourceName = session.document?.layers.first(where: { $0.id == source })?.name ?? "Missing source"
-            dimensions.stringValue = "Clipped to \(sourceName)"
-            dimensions.toolTip = "Clipping mask based on \(sourceName). Option-click the bottom of its row to release."
+            let sourceName = session.document?.layers.first(where: { $0.id == source })?.name ?? L10n.t("Missing source")
+            dimensions.stringValue = L10n.format("Clipped to %@", sourceName)
+            dimensions.toolTip = L10n.format("Clipping mask based on %@. Option-click the bottom of its row to release.", sourceName)
         } else { dimensions.toolTip = nil }
         eye.image = NSImage(systemSymbolName: layer.isVisible ? "eye" : "eye.slash", accessibilityDescription: nil)
-        eye.setAccessibilityLabel("\(layer.isVisible ? "Hide" : "Show") \(layer.name)")
+        eye.setAccessibilityLabel(L10n.format(layer.isVisible ? "Hide %@" : "Show %@", layer.name))
         eye.isEnabled = enabled
         eye.layerID = layer.id
         eye.session = session
@@ -704,7 +710,7 @@ private final class LayerCell: NSTableCellView, NSTextFieldDelegate {
     private static var adjustmentIcons: [String: NSImage] = [:]
     /// The folder symbol at 80% of the size it would fill the thumbnail slot with.
     private static let folderIcon: NSImage? = {
-        guard let symbol = NSImage(systemSymbolName: "folder", accessibilityDescription: "Folder") else { return nil }
+        guard let symbol = NSImage(systemSymbolName: "folder", accessibilityDescription: L10n.t("Folder")) else { return nil }
         let fit = 36 * 0.8 / max(symbol.size.width, symbol.size.height)
         let size = NSSize(width: symbol.size.width * fit, height: symbol.size.height * fit)
         let icon = NSImage(size: NSSize(width: 36, height: 36), flipped: false) { bounds in

@@ -30,6 +30,7 @@ struct NewCanvasSheet: View {
             HStack(spacing: 10) {
                 Button("Open project") { onOpen?() }.buttonStyle(.bordered)
                 Button("Import image") { session.showsImporter = true }.buttonStyle(.bordered)
+                Button("Generate image") { session.openAI(.generate) }.buttonStyle(.bordered)
                 Spacer()
                 Button("Create canvas") {
                     guard let w = CanvasDocument.validDimension(width),

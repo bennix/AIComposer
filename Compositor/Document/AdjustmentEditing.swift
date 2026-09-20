@@ -47,7 +47,7 @@ extension EditorSession {
                 filterEdit = try FilterEdit(kind: original.kind.filterKind ?? .curves, layer: layer, selection: nil, settings: settings)
             }
             adjustmentOriginal = original
-            beginEdit("Edit \(original.kind.rawValue) Adjustment")
+            beginEdit(L10n.format("Edit %@ Adjustment", original.kind.displayName))
         } catch {
             guard adjustmentEditingID == id else { return }
             adjustmentEditingID = nil

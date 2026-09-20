@@ -18,6 +18,7 @@ nonisolated enum FilterKind: String, CaseIterable, Sendable {
     var isAutomatic: Bool { self == .contentAwareFill || self == .removeBackground }
     /// Color adjustments: in the Image menu (and editable as adjustment layers), not under Filter.
     var isImageAdjustment: Bool { self == .curves || self == .exposure || self == .gradientMap || self == .grain }
+    var displayName: String { L10n.t(rawValue) }
 }
 
 /// Remove Background's two ways of working: Apple's own subject mask on its own, or that mask refined against the
@@ -25,6 +26,7 @@ nonisolated enum FilterKind: String, CaseIterable, Sendable {
 nonisolated enum BackgroundQuality: String, CaseIterable, Sendable {
     case basic = "Basic"
     case advanced = "Advanced"
+    var displayName: String { L10n.t(rawValue) }
 }
 
 /// Every filter's settings; each filter reads only its own.
