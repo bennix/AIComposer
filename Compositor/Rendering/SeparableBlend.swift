@@ -8,8 +8,11 @@ import CoreImage
 /// a layer in one of these modes is drawn into a copy of the canvas, blended there, and the result put back.
 nonisolated enum SeparableBlend {
     static func isCoreGraphicsWrong(_ mode: LayerBlendMode) -> Bool { mode == .colorBurn || mode == .colorDodge }
-    private static let ciContext = CIContext(options: [.cacheIntermediates: false])
     private static let space = CGColorSpace(name: CGColorSpace.sRGB)!
+    // Core Image works in a linear space unless told otherwise, and these two modes are not separable from
+    // the gamma they are computed in: over 40% grey, an 80% grey layer dodges to 62% instead of Photoshop's
+    // 100%, and burns to 0% instead of 25%. The blend has to happen in the same sRGB the canvas is in.
+    private static let ciContext = CIContext(options: [.cacheIntermediates: false, .workingColorSpace: space])
 
     /// Draws one layer into `context` in `mode`. `body` draws it as it would be drawn normally, into a context laid
     /// out exactly like `context`. Only a bitmap-backed context can be read back, so anywhere else this reports

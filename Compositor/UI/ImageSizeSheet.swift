@@ -107,13 +107,13 @@ struct ImageSizeSheet: View {
             Text(valid ? L10n.format("Result: %d × %d pixels", Int(width.rounded()), Int(height.rounded())) : L10n.t("Use 1–30,000 pixels per side, up to 100 megapixels, and 1–9,600 pixels/inch."))
                 .foregroundStyle(valid ? Color.secondary : Color.orange).font(.callout)
             HStack {
-                Button("Cancel") { finish(nil) }.keyboardShortcut(.cancelAction)
+                Button("Cancel") { finish(nil) }.configuredNativeShortcut(.escape)
                 Spacer()
                 Button("Resize") {
                     guard valid else { return }
                     finish(ImageSizeOptions(width: Int(width.rounded()), height: Int(height.rounded()),
                         resolution: resolution, sampling: sampling))
-                }.keyboardShortcut(.defaultAction).disabled(!valid)
+                }.configuredNativeShortcut(.return).disabled(!valid)
             }
         }.textFieldStyle(.roundedBorder).padding(24).frame(width: 430)
     }

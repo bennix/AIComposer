@@ -44,13 +44,24 @@ struct BlendModePicker: NSViewRepresentable {
             highlightedMode = nil
         }
         func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+            // AppKit briefly reports no highlighted item while dismissing the menu.
+            // Keep the last preview alive until the selection action has committed so
+            // the canvas never flashes back to the layer's previous mode.
             let mode = item.flatMap { ($0.representedObject as? String).flatMap(LayerBlendMode.init(rawValue:)) }
-            if let mode { highlightedMode = mode }
+                ?? item.flatMap { LayerBlendMode(rawValue: $0.title) }
+            guard let mode else { return }
+            highlightedMode = mode
             session.previewBlendMode(mode, for: layerID)
         }
         func menuDidClose(_ menu: NSMenu) {
             tracking = false
-            session.previewBlendMode(nil, for: nil)
+            // A chosen item's action runs as the menu finishes closing. Clearing on the
+            // next turn lets that action replace the preview with the committed mode;
+            // when the menu was cancelled, this simply restores the original mode.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, !self.tracking else { return }
+                self.session.previewBlendMode(nil, for: nil)
+            }
         }
         @objc func choose(_ button: NSPopUpButton) {
             guard session.activeLayerID == layerID,
