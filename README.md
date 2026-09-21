@@ -60,4 +60,4 @@ AIComposer is an AI-enhanced fork of [Compositor](https://github.com/robbietilto
 
 ## Releasing
 
-`scripts/release.sh` archives a Developer ID build, notarizes it, and writes `dist/Compositor-<version>.dmg`. Certificates and notary credentials stay out of this repository.
+`scripts/release.sh` archives a Developer ID build, notarizes it, and writes `dist/Compositor-<version>.dmg`. Then `scripts/publish.sh` creates the GitHub Release on [bennix/AIComposer](https://github.com/bennix/AIComposer) and updates the Sparkle feed at `https://bennix.github.io/AIComposer/appcast.xml`. In-app updates use that feed, not the upstream Compositor appcast. Certificates and notary credentials stay out of this repository.

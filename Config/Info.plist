@@ -39,9 +39,9 @@
     <!-- Sparkle updates: where the feed lives (permanent), the key updates are signed with, and the helper a
          sandboxed app installs them through. -->
     <key>SUFeedURL</key>
-    <string>https://raw.githubusercontent.com/robbietilton/Compositor/main/appcast.xml</string>
+    <string>https://bennix.github.io/AIComposer/appcast.xml</string>
     <key>SUPublicEDKey</key>
-    <string>KZvD724t8QpzTR4OGrHrsCWt538TJ/g/qrTZii+o214=</string>
+    <string>sYZX4aItKQg0CvVYtZB130Zxo0+UbvwiR6oVeJXksxs=</string>
     <key>SUEnableInstallerLauncherService</key>
     <true/>
 </dict></plist>
