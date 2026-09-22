@@ -402,6 +402,11 @@ add("Night with stars", "星空夜晚", "星空夜晚", "星空の夜", "별이 
 # AI errors / help (titles already above; help + prompts)
 add("Open or create a canvas first.", "请先打开或创建画布。", "請先開啟或建立畫布。", "先にキャンバスを開くか作成してください。", "먼저 캔버스를 열거나 만드세요.")
 add("Draw a selection first, then run this command.", "请先绘制选区，再运行此命令。", "請先繪製選取範圍，再執行此命令。", "先に選択範囲を作成してから実行してください。", "먼저 선택 영역을 그린 뒤 이 명령을 실행하세요.")
+add("Draw a selection or select one or more objects first, then run this command.",
+    "请先绘制选区，或选中一个或多个对象，再运行此命令。",
+    "請先繪製選取範圍，或選取一個或多個物件，再執行此命令。",
+    "先に選択範囲を作るか、オブジェクトを選んでから実行してください。",
+    "먼저 선택 영역을 그리거나 하나 이상의 오브젝트를 선택한 뒤 이 명령을 실행하세요.")
 add("Enter a prompt describing what you want.", "请输入描述目标的提示词。", "請輸入描述目標的提示詞。", "作りたい内容をプロンプトで入力してください。", "원하는 내용을 프롬프트로 입력하세요.")
 add("The model returned no image. Try another model or a shorter prompt.",
     "模型没有返回图像。请换一个模型或缩短提示词。",

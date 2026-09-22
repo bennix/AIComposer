@@ -153,6 +153,49 @@ struct TypeToolTests {
         #expect(session.textDraft == nil)
     }
 
+    @Test func oldProjectsDecodeWithoutWarpKeys() throws {
+        let json = """
+        {"content":"Hello","fontName":"Helvetica","fontSize":48,"red":1,"green":0,"blue":0,"alignment":"Left","tracking":0,"leading":0}
+        """.data(using: .utf8)!
+        let style = try JSONDecoder().decode(LayerTextStyle.self, from: json)
+        #expect(style.content == "Hello")
+        #expect(style.warp == .none)
+        #expect(style.warpBend == 50)
+        #expect(style.fontFamily.contains("Helvetica") || style.fontName == "Helvetica")
+    }
+
+    @Test func warpBendsLettersAndKeepsThemEditable() throws {
+        var style = LayerTextStyle()
+        style.content = "WARP"
+        style.red = 1
+        let flat = try EditorSession.textImage(style)
+        style.warp = .arc
+        style.warpBend = 80
+        let bent = try EditorSession.textImage(style)
+        #expect(bent.height > flat.height)
+        let session = makeSession()
+        session.beginText(at: .zero)
+        session.textDraft?.style.content = "Text"
+        var draft = try #require(session.textDraft)
+        draft.style.content = "WARP"
+        draft.style.warp = .wave
+        draft.style.warpBend = 60
+        #expect(session.applyText(draft))
+        #expect(session.activeLayer?.liveText?.style.warp == .wave)
+        #expect(session.activeLayer?.liveText != nil)
+    }
+
+    @Test func fontFamilyPicksAnInstalledFace() {
+        var style = LayerTextStyle()
+        let family = style.fontFamily
+        let faces = EditorSession.fontFaces(in: family)
+        #expect(!faces.isEmpty)
+        if let other = NSFontManager.shared.availableFontFamilies.first(where: { $0 != family }) {
+            EditorSession.setFontFamily(other, on: &style)
+            #expect(style.fontFamily == other || style.fontName.contains(other))
+        }
+    }
+
     @Test func invalidAndStaleDraftsDoNotChangeDocument() throws {
         let session = makeSession()
         session.beginText(at: .zero)

@@ -198,8 +198,8 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
         case .enhance: L10n.t("Returns a sharper, higher-resolution layer displayed at the original size.")
         case .cleanup: L10n.t("Removes dust, compression, and mild blur while keeping the photo honest.")
         case .restore: L10n.t("Repairs scratches, stains, and fading on archival photographs.")
-        case .fill: L10n.t("Edits the current layer in place. Only the selected pixels change; nothing new is added to the Layers list.")
-        case .removeObject: L10n.t("Erases whatever is inside the selection and rebuilds a matching background.")
+        case .fill: L10n.t("Edits the selected pixels or selected objects on their own layers. The surrounding photograph is sent as context; nothing new is added to the Layers list.")
+        case .removeObject: L10n.t("Erases the selected pixels or selected objects and rebuilds a matching background from the surroundings.")
         case .handwriting: L10n.t("Clears pen marks and signatures. Printed type and graphics are kept.")
         case .removeText: L10n.t("Removes captions, labels, and overlaid type. A selection limits the pass.")
         case .replaceBackground: L10n.t("Keeps the subject and builds a new environment behind it.")
@@ -257,6 +257,11 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
 
     var needsSelection: Bool { input == .selection }
 
+    /// Selected objects are kept; the model paints the environment around them.
+    var invertsObjectMask: Bool {
+        self == .replaceBackground || self == .replaceSky
+    }
+
     var presets: [String] {
         let keys: [String]
         switch self {
@@ -287,7 +292,7 @@ nonisolated enum AIImageError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noDocument: L10n.t("Open or create a canvas first.")
-        case .noSelection: L10n.t("Draw a selection first, then run this command.")
+        case .noSelection: L10n.t("Draw a selection or select one or more objects first, then run this command.")
         case .emptyPrompt: L10n.t("Enter a prompt describing what you want.")
         case .noImageInResponse: L10n.t("The model returned no image. Try another model or a shorter prompt.")
         case .http(_, let message): message

@@ -1402,6 +1402,15 @@ final class CanvasView: NSView {
             beginCropDrag(at: point)
         } else if session.tool == .move {
             if beginGuideDrag(at: point) { return }
+            if event.clickCount >= 2, let document = session.document {
+                let pixel = session.viewport.documentPoint(from: point, documentSize: document.size)
+                if let id = LayerHit.layer(under: pixel, in: document, visible: document.effectiveVisibleIDs),
+                   document.layers.first(where: { $0.id == id })?.liveText != nil {
+                    session.selectLayer(id)
+                    session.editActiveText()
+                    return
+                }
+            }
             beginTransformDrag(at: point, modifiers: event.modifierFlags)
         } else if session.tool == .zoom {
             zoomDrag = (point, session.viewport.zoom, false)

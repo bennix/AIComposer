@@ -11,7 +11,7 @@ extension EditorSession {
         switch kind.input {
         case .none: return true
         case .canvas, .canvasOrSelection, .expand: return document != nil
-        case .selection: return document != nil && selection?.isEmpty == false
+        case .selection: return document != nil && (selection?.isEmpty == false || hasAIObjectTarget)
         }
     }
 
@@ -74,13 +74,13 @@ extension EditorSession {
         let combined = AIImagePipeline.combinedPrompt(
             kind: kind,
             extra: prompt,
-            hasSelection: editSelection(for: kind)?.isEmpty == false
+            hasSelection: hasAIEditRegion(for: kind)
         )
         if kind.requiresPrompt && combined.isEmpty {
             importError = AIImageError.emptyPrompt.localizedDescription
             return
         }
-        if kind.needsSelection, selection?.isEmpty != false {
+        if kind.needsSelection, !hasAIEditRegion(for: kind) {
             importError = AIImageError.noSelection.localizedDescription
             return
         }
@@ -121,6 +121,29 @@ extension EditorSession {
         }
     }
 
+    /// Pixel marquee, or the painted pixels of one or more selected objects (including live text).
+    var hasAIObjectTarget: Bool { !aiEditableLayers().isEmpty }
+
+    func hasAIEditRegion(for kind: AISheetKind) -> Bool {
+        switch kind.input {
+        case .selection: selection?.isEmpty == false || hasAIObjectTarget
+        case .canvasOrSelection: true
+        default: false
+        }
+    }
+
+    /// Selected pixel / text layers, expanding a selected folder to its painted descendants.
+    func aiEditableLayers() -> [ImageLayer] {
+        guard let document else { return [] }
+        var ids = selectedLayerIDs
+        for id in selectedLayerIDs { ids.formUnion(descendantIDs(of: id)) }
+        let visible = document.effectiveVisibleIDs
+        return document.renderLayers.filter {
+            ids.contains($0.id) && visible.contains($0.id) && !$0.isGroup
+                && $0.asset != nil && $0.adjustment == nil
+        }
+    }
+
     private func runAIEdit(
         kind: AISheetKind,
         prompt: String,
@@ -131,7 +154,7 @@ extension EditorSession {
     ) async throws {
         guard let snapshot = projectSnapshot() else { throw AIImageError.noDocument }
         let raster = try await ImageExporter.shared.render(snapshot)
-        let work = try AIImagePipeline.workImage(canvas: raster.image, selection: editSelection(for: kind))
+        let work = try aiWorkImage(canvas: raster.image, kind: kind)
         let sendImage = try AIImagePipeline.scaledForUpload(work.image)
         let sendMask = try work.mask.map { try AIImagePipeline.scaledForUpload($0) }
         let sendCoverage = try work.coverage.map {
@@ -162,14 +185,46 @@ extension EditorSession {
         try commitAIEdit(generated: image, work: work, kind: kind, selection: editSelection(for: kind))
     }
 
+    private func aiWorkImage(canvas: CGImage, kind: AISheetKind) throws -> AIWorkImage {
+        if let selection = editSelection(for: kind), !selection.isEmpty {
+            return try AIImagePipeline.workImage(canvas: canvas, selection: selection)
+        }
+        let objects = aiEditableLayers()
+        if !objects.isEmpty, kind.input == .selection || kind.input == .canvasOrSelection {
+            var coverage = try AIImagePipeline.coverage(
+                of: objects,
+                canvas: CGSize(width: canvas.width, height: canvas.height)
+            )
+            if kind.invertsObjectMask, let inverted = AIImagePipeline.invertCoverage(coverage) {
+                coverage = inverted
+            }
+            return try AIImagePipeline.workImage(
+                canvas: canvas,
+                coverage: coverage,
+                selection: AIImagePipeline.bounds(
+                    of: objects,
+                    canvas: CGSize(width: canvas.width, height: canvas.height)
+                )
+            )
+        }
+        return try AIImagePipeline.workImage(canvas: canvas, selection: nil)
+    }
+
     /// The pixel layer the edit should write back to — never a new "AI Fill" layer.
-    func aiTargetLayer() -> ImageLayer? {
+    func aiTargetLayer() -> ImageLayer? { aiTargetLayers().first }
+
+    func aiTargetLayers() -> [ImageLayer] {
+        let objects = aiEditableLayers()
+        if !objects.isEmpty { return objects }
         if let layer = activeLayer, !layer.isGroup, layer.asset != nil, layer.adjustment == nil {
-            return layer
+            return [layer]
         }
-        return document?.layers.reversed().first {
+        if let layer = document?.layers.reversed().first(where: {
             !$0.isGroup && $0.isVisible && $0.asset != nil && $0.adjustment == nil
+        }) {
+            return [layer]
         }
+        return []
     }
 
     func commitAIEdit(
@@ -178,37 +233,33 @@ extension EditorSession {
         kind: AISheetKind,
         selection: DocumentSelection?
     ) throws {
-        let hasSelection = selection.map { !$0.isEmpty } == true
-        if hasSelection, kind.upscaleFactor <= 1, let selection {
+        let hasRegion = work.coverage != nil || selection.map { !$0.isEmpty } == true
+        if hasRegion, kind.upscaleFactor <= 1 {
             let coverage: CGImage
             if let local = work.coverage {
                 coverage = local
-            } else {
+            } else if let selection, !selection.isEmpty {
                 let full = try selection.coverage(width: Int(work.canvasSize.width), height: Int(work.canvasSize.height))
                 coverage = try AIImagePipeline.crop(
                     full,
                     to: CGRect(origin: work.origin, size: CGSize(width: work.image.width, height: work.image.height))
                 )
+            } else {
+                throw AIImageError.noSelection
             }
             let seam = try AIImagePipeline.compositeCoverage(from: coverage, selection: work.selectionInWork)
             let composited = try AIImagePipeline.compositeIntoOriginal(work.image, generated: generated, coverage: seam)
             try writeComposited(composited, work: work, selection: selection, actionName: kind.layerName)
             return
         }
-        if let target = aiTargetLayer(),
-           let index = document?.layers.firstIndex(where: { $0.id == target.id }) {
+        if let target = aiTargetLayers().first,
+           let index = document?.layers.firstIndex(where: { $0.id == target.id }),
+           aiTargetLayers().count == 1 {
             let asset = try AIImagePipeline.asset(from: generated, name: target.name)
             var transform = target.transform
             if kind.upscaleFactor > 1 { transform.size = target.transform.size }
             beginEdit(kind.layerName)
-            document?.layers[index] = ImageLayer(
-                id: target.id, asset: asset, name: target.name,
-                isVisible: target.isVisible, transform: transform,
-                parentID: target.parentID, isGroup: false,
-                opacity: target.opacity, blendMode: target.blendMode,
-                mask: target.mask, maskSourceID: target.maskSourceID,
-                adjustment: target.adjustment, shape: target.shape
-            )
+            writeLayerPixels(at: index, target: target, asset: asset, transform: transform)
             endEdit()
             return
         }
@@ -229,47 +280,60 @@ extension EditorSession {
         selection: DocumentSelection?,
         actionName: String
     ) throws {
-        guard let target = aiTargetLayer(),
-              let index = document?.layers.firstIndex(where: { $0.id == target.id }),
-              let original = target.asset?.image else {
+        let targets = aiTargetLayers()
+        guard !targets.isEmpty else {
             insertGenerated(try AIImagePipeline.asset(from: composited, name: actionName), origin: work.origin)
             return
         }
-        let painted: CGImage
-        if AIImagePipeline.layerMatchesWork(target, work: work) {
-            painted = composited
-        } else {
-            let placed = try AIImagePipeline.paint(
-                composited,
-                at: work.origin,
-                workSize: CGSize(width: work.image.width, height: work.image.height),
-                onto: original,
-                layerTransform: target.transform
-            )
-            if let selection, let document, !selection.isEmpty {
-                let mapping = BrushRaster.pixelToDocument(target.transform, width: original.width, height: original.height)
-                let clip = try selection.clip(canvas: document.size)
-                painted = try PixelAdjust.blend(placed, over: original, through: clip, pixelToDocument: mapping, isMask: false)
+        beginEdit(actionName)
+        for target in targets {
+            guard let index = document?.layers.firstIndex(where: { $0.id == target.id }),
+                  let original = target.asset?.image else { continue }
+            let painted: CGImage
+            if AIImagePipeline.layerMatchesWork(target, work: work) {
+                painted = composited
             } else {
-                painted = placed
+                let placed = try AIImagePipeline.paint(
+                    composited,
+                    at: work.origin,
+                    workSize: CGSize(width: work.image.width, height: work.image.height),
+                    onto: original,
+                    layerTransform: target.transform
+                )
+                if let selection, let document, !selection.isEmpty {
+                    let mapping = BrushRaster.pixelToDocument(target.transform, width: original.width, height: original.height)
+                    let clip = try selection.clip(canvas: document.size)
+                    painted = try PixelAdjust.blend(placed, over: original, through: clip, pixelToDocument: mapping, isMask: false)
+                } else {
+                    let alpha = try AIImagePipeline.alphaCoverage(from: original)
+                    painted = try AIImagePipeline.compositeIntoOriginal(original, generated: placed, coverage: alpha)
+                }
             }
+            let asset = (try? AIImagePipeline.asset(from: painted, name: target.name))
+                ?? ImportedImage(image: painted, thumbnail: painted, name: target.name)
+            writeLayerPixels(at: index, target: target, asset: asset, transform: target.transform)
         }
-        replaceLayerPixels(at: index, target: target, image: painted, actionName: actionName)
+        endEdit()
     }
 
     private func replaceLayerPixels(at index: Int, target: ImageLayer, image: CGImage, actionName: String) {
         let asset = (try? AIImagePipeline.asset(from: image, name: target.name))
             ?? ImportedImage(image: image, thumbnail: image, name: target.name)
         beginEdit(actionName)
+        writeLayerPixels(at: index, target: target, asset: asset, transform: target.transform)
+        endEdit()
+    }
+
+    /// Writes pixels in place and drops live text: the raster no longer matches the source letters.
+    private func writeLayerPixels(at index: Int, target: ImageLayer, asset: ImportedImage, transform: LayerTransform) {
         document?.layers[index] = ImageLayer(
             id: target.id, asset: asset, name: target.name,
-            isVisible: target.isVisible, transform: target.transform,
+            isVisible: target.isVisible, transform: transform,
             parentID: target.parentID, isGroup: false,
             opacity: target.opacity, blendMode: target.blendMode,
             mask: target.mask, maskSourceID: target.maskSourceID,
             adjustment: target.adjustment, shape: target.shape
         )
-        endEdit()
     }
 
     private func runAIExpand(

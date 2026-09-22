@@ -243,6 +243,38 @@ struct AIImagePipelineTests {
     }
 
     @MainActor
+    @Test func objectCommandsOpenFromSelectedLayers() throws {
+        let session = EditorSession()
+        session.createDocument(width: 64, height: 48)
+        let photo = try color(width: 64, height: 48, red: 0, green: 0.4, blue: 0)
+        session.insert(try AIImagePipeline.asset(from: photo, name: "Photo"))
+        #expect(session.hasAIObjectTarget)
+        #expect(session.canOpen(.fill))
+        #expect(session.canOpen(.removeObject))
+        #expect(session.hasAIEditRegion(for: .fill))
+    }
+
+    @Test func layerCoverageUsesPaintedPixelsNotTheFullBox() throws {
+        let background = try color(width: 40, height: 30, red: 0, green: 0.4, blue: 0)
+        let islandContext = try BrushRaster.context(width: 40, height: 30, mask: false)
+        islandContext.clear(CGRect(x: 0, y: 0, width: 40, height: 30))
+        islandContext.setFillColor(CGColor(red: 1, green: 0, blue: 0, alpha: 1))
+        islandContext.fill(CGRect(x: 12, y: 8, width: 10, height: 8))
+        let island = try #require(islandContext.makeImage())
+        let front = ImageLayer(asset: ImportedImage(image: island, thumbnail: island, name: "Front"), origin: .zero)
+        let coverage = try AIImagePipeline.coverage(of: [front], canvas: CGSize(width: 40, height: 30))
+        #expect(coverage.width == 40 && coverage.height == 30)
+        let work = try AIImagePipeline.workImage(
+            canvas: background,
+            coverage: coverage,
+            selection: CGRect(x: 12, y: 8, width: 10, height: 8)
+        )
+        #expect(work.mask != nil)
+        #expect(work.coverage != nil)
+        #expect(work.image.width == 40)
+    }
+
+    @MainActor
     @Test func selectionEditWritesTheExistingLayer() throws {
         let session = EditorSession()
         session.createDocument(width: 40, height: 30)

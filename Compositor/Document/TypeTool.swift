@@ -4,6 +4,18 @@ nonisolated enum TextAlignment: String, Codable, CaseIterable, Sendable {
     case left = "Left", center = "Center", right = "Right"
 }
 
+/// Photoshop-style warp kept on live text: the letters stay editable; only the raster bends.
+nonisolated enum TextWarpKind: String, Codable, CaseIterable, Sendable {
+    case none = "None"
+    case arc = "Arc"
+    case arch = "Arch"
+    case wave = "Wave"
+    case flag = "Flag"
+    case rise = "Rise"
+    case bulge = "Bulge"
+    case squeeze = "Squeeze"
+}
+
 nonisolated struct LayerTextStyle: Codable, Equatable, Sendable {
     var content = "Text"
     var fontName = "Helvetica"
@@ -22,6 +34,9 @@ nonisolated struct LayerTextStyle: Codable, Equatable, Sendable {
     static let padding: CGFloat = 12
     /// Fixed paragraph bounds in layer pixels. Nil supports older point-text layers.
     var boxSize: CGSize? = nil
+    var warp: TextWarpKind = .none
+    /// −100…100. Positive lifts the middle on Arc/Arch, or stretches the middle on Bulge.
+    var warpBend: CGFloat = 50
     var boxIsValid: Bool {
         guard let boxSize else { return true }
         return boxSize.width.isFinite && boxSize.height.isFinite && (16...30_000).contains(boxSize.width)
@@ -33,6 +48,48 @@ nonisolated struct LayerTextStyle: Codable, Equatable, Sendable {
         && [red, green, blue].allSatisfy { $0.isFinite && (0...1).contains($0) }
         && tracking.isFinite && (-100...1000).contains(tracking)
         && leading.isFinite && (0...5000).contains(leading)
+        && warpBend.isFinite && (-100...100).contains(warpBend)
+    }
+    var fontFamily: String {
+        (NSFont(name: fontName, size: 12) ?? .systemFont(ofSize: 12)).familyName ?? fontName
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case content, fontName, fontSize, red, green, blue, alignment, tracking, leading, boxSize, warp, warpBend
+    }
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        content = try c.decodeIfPresent(String.self, forKey: .content) ?? "Text"
+        fontName = try c.decodeIfPresent(String.self, forKey: .fontName) ?? "Helvetica"
+        fontSize = try c.decodeIfPresent(CGFloat.self, forKey: .fontSize) ?? 72
+        red = try c.decodeIfPresent(CGFloat.self, forKey: .red) ?? 0
+        green = try c.decodeIfPresent(CGFloat.self, forKey: .green) ?? 0
+        blue = try c.decodeIfPresent(CGFloat.self, forKey: .blue) ?? 0
+        alignment = try c.decodeIfPresent(TextAlignment.self, forKey: .alignment) ?? .left
+        tracking = try c.decodeIfPresent(CGFloat.self, forKey: .tracking) ?? 0
+        leading = try c.decodeIfPresent(CGFloat.self, forKey: .leading) ?? 0
+        boxSize = try c.decodeIfPresent(CGSize.self, forKey: .boxSize)
+        warp = try c.decodeIfPresent(TextWarpKind.self, forKey: .warp) ?? .none
+        warpBend = try c.decodeIfPresent(CGFloat.self, forKey: .warpBend) ?? 50
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(content, forKey: .content)
+        try c.encode(fontName, forKey: .fontName)
+        try c.encode(fontSize, forKey: .fontSize)
+        try c.encode(red, forKey: .red)
+        try c.encode(green, forKey: .green)
+        try c.encode(blue, forKey: .blue)
+        try c.encode(alignment, forKey: .alignment)
+        try c.encode(tracking, forKey: .tracking)
+        try c.encode(leading, forKey: .leading)
+        try c.encodeIfPresent(boxSize, forKey: .boxSize)
+        if warp != .none { try c.encode(warp, forKey: .warp) }
+        if warp != .none { try c.encode(warpBend, forKey: .warpBend) }
     }
 }
 
@@ -250,7 +307,63 @@ extension EditorSession {
         layout.addTextContainer(container)
         let glyphs = layout.glyphRange(for: container)
         layout.drawGlyphs(forGlyphRange: glyphs, at: CGPoint(x: padding, y: padding))
-        guard let image = context.makeImage() else { throw ExportError.render }
-        return image
+        guard let flat = context.makeImage() else { throw ExportError.render }
+        return try warpText(flat, kind: style.warp, bend: style.warpBend)
+    }
+
+    /// Installed faces in `family` as (PostScript name, face title).
+    static func fontFaces(in family: String) -> [(name: String, title: String)] {
+        let members = NSFontManager.shared.availableMembers(ofFontFamily: family) ?? []
+        let faces = members.compactMap { row -> (String, String)? in
+            guard let name = row.first as? String else { return nil }
+            let title = (row.dropFirst().first as? String)?.trimmingCharacters(in: .whitespaces)
+            return (name, (title?.isEmpty == false ? title! : name))
+        }
+        return faces.isEmpty ? [(family, family)] : faces
+    }
+
+    static func setFontFamily(_ family: String, on style: inout LayerTextStyle) {
+        let faces = fontFaces(in: family)
+        if faces.contains(where: { $0.name == style.fontName }) { return }
+        style.fontName = faces.first?.name ?? family
+    }
+
+    /// Bend live-text pixels. The source stays editable; only this raster is deformed.
+    static func warpText(_ image: CGImage, kind: TextWarpKind, bend: CGFloat) throws -> CGImage {
+        guard kind != .none, abs(bend) > 0.5 else { return image }
+        let amount = max(-1, min(1, bend / 100))
+        let width = image.width, height = image.height
+        let padY = max(8, Int(CGFloat(height) * abs(amount) * 0.55))
+        let destH = height + padY * 2
+        let destW = width
+        let context = try BrushRaster.context(width: destW, height: destH, mask: false)
+        context.clear(CGRect(x: 0, y: 0, width: destW, height: destH))
+        let strips = max(32, width)
+        for i in 0..<strips {
+            let x = i
+            let t = (CGFloat(x) + 0.5) / CGFloat(max(1, width)) * 2 - 1
+            let sample = warpSample(t: t, kind: kind, amount: amount)
+            let destY = CGFloat(padY) + sample.dy * CGFloat(height)
+            let destHeight = max(1, CGFloat(height) * sample.scaleY)
+            guard let tile = image.cropping(to: CGRect(x: x, y: 0, width: 1, height: height)) else { continue }
+            BrushRaster.draw(tile, in: CGRect(x: CGFloat(x), y: destY, width: 1, height: destHeight),
+                             mask: false, context: context)
+        }
+        guard let warped = context.makeImage() else { throw ExportError.render }
+        return warped
+    }
+
+    private static func warpSample(t: CGFloat, kind: TextWarpKind, amount: CGFloat) -> (dy: CGFloat, scaleY: CGFloat) {
+        let u = max(-1, min(1, t))
+        switch kind {
+        case .none: return (0, 1)
+        case .arc: return (amount * (1 - u * u) * 0.42, 1)
+        case .arch: return (amount * cos(u * .pi / 2) * 0.42, 1)
+        case .wave: return (amount * sin(u * .pi * 2) * 0.28, 1)
+        case .flag: return (amount * sin((u * 0.5 + 0.5) * .pi) * 0.32, 1)
+        case .rise: return (amount * u * 0.38, 1)
+        case .bulge: return (0, max(0.2, 1 + amount * (1 - u * u) * 0.55))
+        case .squeeze: return (0, max(0.2, 1 - amount * (1 - u * u) * 0.55))
+        }
     }
 }

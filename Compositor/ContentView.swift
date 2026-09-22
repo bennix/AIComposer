@@ -40,7 +40,7 @@ struct ContentView: View {
                 GradientControls(session: session)
                 Divider()
             }
-            if session.tool == .type {
+            if session.tool == .type || session.textDraft != nil || session.activeLayer?.liveText != nil {
                 TypeControls(session: session)
                 Divider()
             }

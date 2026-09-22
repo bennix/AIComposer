@@ -98,6 +98,60 @@ nonisolated enum AIImagePipeline {
         return box.width >= 1 && box.height >= 1 ? box : canvasRect
     }
 
+    /// White coverage of the painted pixels on `layers`, in the same top-left space as export.
+    static func coverage(of layers: [ImageLayer], canvas: CGSize) throws -> CGImage {
+        let width = max(1, Int(canvas.width.rounded())), height = max(1, Int(canvas.height.rounded()))
+        let color = try BrushRaster.context(width: width, height: height, mask: false)
+        color.clear(CGRect(x: 0, y: 0, width: width, height: height))
+        for layer in layers {
+            guard let image = layer.asset?.image else { continue }
+            let mask = layer.mask?.clipImage(
+                placement: layer.maskTransform, over: layer.transform,
+                width: image.width, height: image.height
+            )
+            LayerRenderer.draw(
+                image, transform: layer.transform, center: layer.transform.center,
+                opacity: 1, blendMode: .normal, mask: mask, in: color
+            )
+        }
+        guard let stamped = color.makeImage() else { throw ExportError.render }
+        return try alphaCoverage(from: stamped)
+    }
+
+    static func alphaCoverage(from image: CGImage) throws -> CGImage {
+        let width = image.width, height = image.height
+        let context = try BrushRaster.context(width: width, height: height, mask: true)
+        context.setFillColor(gray: 0, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        BrushRaster.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height), mask: true, context: context)
+        guard let coverage = context.makeImage() else { throw ExportError.render }
+        return coverage
+    }
+
+    static func bounds(of layers: [ImageLayer], canvas: CGSize) -> CGRect {
+        let frame = CGRect(origin: .zero, size: canvas)
+        var box: CGRect?
+        for layer in layers {
+            let next = CGRect(origin: layer.transform.origin, size: layer.transform.size).intersection(frame)
+            guard !next.isNull, next.width >= 1, next.height >= 1 else { continue }
+            box = box.map { $0.union(next) } ?? next
+        }
+        return box ?? frame
+    }
+
+    static func workImage(canvas: CGImage, coverage: CGImage, selection: CGRect) throws -> AIWorkImage {
+        let size = CGSize(width: canvas.width, height: canvas.height)
+        let box = contextBox(for: selection, canvas: size)
+        let cropped = try crop(canvas, to: box)
+        let croppedCoverage = try crop(coverage, to: box)
+        let local = selection.offsetBy(dx: -box.minX, dy: -box.minY)
+        let send = try sendCoverage(from: croppedCoverage, selection: local)
+        return AIWorkImage(
+            image: cropped, mask: try openaiMask(from: send), origin: box.origin, canvasSize: size,
+            coverage: croppedCoverage, selectionInWork: local
+        )
+    }
+
     static func workImage(canvas: CGImage, selection: DocumentSelection?, padding: Int? = nil) throws -> AIWorkImage {
         let size = CGSize(width: canvas.width, height: canvas.height)
         guard let selection, !selection.isEmpty else {
