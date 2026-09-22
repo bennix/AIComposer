@@ -1278,7 +1278,7 @@ final class CanvasView: NSView {
     /// the press. A press on empty canvas still drags the active layer: it need not land inside the layer's bounds.
     private func transformPressLayer(at pixel: CGPoint, flags: NSEvent.ModifierFlags) -> (id: UUID, picked: Bool)? {
         guard session.canEditLayers || session.transformEdit != nil, let document = session.document else { return nil }
-        let underPointer = document.renderLayers.reversed().first { $0.asset != nil && $0.transform.contains(pixel) }?.id
+        let underPointer = LayerHit.layer(under: pixel, in: document, visible: document.effectiveVisibleIDs)
         let active = session.activeLayer.flatMap { layer in
             layer.asset != nil && !layer.isGroup && document.effectiveVisibleIDs.contains(layer.id) ? layer : nil
         }
@@ -1290,19 +1290,14 @@ final class CanvasView: NSView {
             let box = session.transformEdit?.draft ?? session.groupTransformBox
             if box?.contains(pixel) == true || !(picks && session.transformAutoSelect) || underPointer == nil { return (id, false) }
         }
+        // Trust painted pixels, not bounding boxes: a selected PSD layer often covers the canvas
+        // while remaining transparent, and the object you clicked belongs to a layer underneath.
+        if picks, session.transformAutoSelect, let underPointer {
+            return (underPointer, underPointer != active?.id)
+        }
         if let active, session.editedTransform(for: active).contains(pixel) {
-            // `renderLayers` is bottom to top, so a later index is painted above. Prefer that layer
-            // when auto-select is on; a full-canvas background contains every press, and keeping it
-            // would hide a foreground layer stacked on top of it.
-            if picks, session.transformAutoSelect, let underPointer, underPointer != active.id,
-               let top = document.renderLayers.lastIndex(where: { $0.id == underPointer }),
-               let current = document.renderLayers.lastIndex(where: { $0.id == active.id }),
-               top > current {
-                return (underPointer, true)
-            }
             return (active.id, false)
         }
-        if picks, session.transformAutoSelect || flags.contains(.command), let underPointer { return (underPointer, true) }
         return active.map { ($0.id, false) }
     }
     /// Right-drag with a brush tool: left and right resize the brush from its size at the press, or with Shift

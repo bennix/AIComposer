@@ -10,8 +10,8 @@ struct TransformInspector: View {
         HStack(spacing: 12) {
           Text(session.transformTargetsMask ? "Transform Mask" : "Transform").font(ToolHeaderStyle.titleFont)
               .padding(.leading, 18)
-          Toggle("Auto Select", isOn: $session.transformAutoSelect)
-              .help("Select layers by clicking the canvas. When off, hold Command to select a layer.")
+          Toggle(L10n.t("Auto Select"), isOn: $session.transformAutoSelect)
+              .help(L10n.t("Select layers by clicking the canvas. When off, hold Command to select a layer."))
               .accessibilityIdentifier("transformAutoSelect")
           Toggle("Show Controls", isOn: $session.showsTransformControls)
               .help("Show the transform box and handles (⌘H). When hidden, drag anywhere to move the layer.")

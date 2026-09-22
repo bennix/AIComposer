@@ -55,8 +55,7 @@ struct TransformTests {
             view.mouseUp(with: event)
             session.commitTransform()
         }
-        #expect(!session.transformAutoSelect, "Auto Select starts off; a press drags the active layer")
-        session.transformAutoSelect = true
+        #expect(session.transformAutoSelect, "Auto Select starts on; a press picks the layer under the pointer")
         try click(CGPoint(x: 300, y: 50))
         #expect(session.activeLayerID == second)
         session.selectLayer(first)
@@ -94,7 +93,6 @@ struct TransformTests {
             view.mouseUp(with: event)
             session.commitTransform()
         }
-        session.transformAutoSelect = true
         try click(CGPoint(x: 180, y: 70))
         #expect(session.activeLayerID == foreground)
         try click(CGPoint(x: 20, y: 20))
@@ -126,6 +124,55 @@ struct TransformTests {
         if case .rotate = geometry.hit(geometry.rotationHandle) {} else { Issue.record("Rotation handle was not recognized") }
         #expect(geometry.hit(viewport.viewPoint(from: transform.center, documentSize: size)) == nil)
     }
+    /// PSD-style layers share a large box; only the painted island should take the click.
+    @Test func canvasPickIgnoresTransparentPixelsOnOverlappingBounds() throws {
+        let session = EditorSession()
+        session.createDocument(width: 400, height: 200)
+        try insertPaintedLayer(into: session)
+        let background = try #require(session.activeLayerID)
+        try insertIslandLayer(into: session, fill: CGRect(x: 150, y: 50, width: 80, height: 60))
+        let foreground = try #require(session.activeLayerID)
+        let document = try #require(session.document)
+        let visible = document.effectiveVisibleIDs
+        #expect(LayerHit.layer(under: CGPoint(x: 180, y: 70), in: document, visible: visible) == foreground)
+        #expect(LayerHit.layer(under: CGPoint(x: 20, y: 20), in: document, visible: visible) == background)
+        session.selectLayer(background)
+        let view = CanvasView(session: session)
+        let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 400, height: 200),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = view
+        defer { window.contentView = nil }
+        session.viewport.resize(to: view.bounds.size, backingScale: 1, documentSize: session.document?.size)
+        session.zoom(to: 1)
+        func click(_ point: CGPoint) throws {
+            let location = view.convert(session.viewport.viewPoint(from: point, documentSize: CGSize(width: 400, height: 200)), to: nil)
+            let event = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: location,
+                modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber,
+                context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+            view.mouseDown(with: event)
+            view.mouseUp(with: event)
+            session.commitTransform()
+        }
+        try click(CGPoint(x: 20, y: 20))
+        #expect(session.activeLayerID == background)
+        try click(CGPoint(x: 180, y: 70))
+        #expect(session.activeLayerID == foreground)
+        try click(CGPoint(x: 20, y: 20))
+        #expect(session.activeLayerID == background)
+    }
+
+    private func insertIslandLayer(into session: EditorSession, fill: CGRect) throws {
+        let size = try #require(session.document?.size)
+        let context = try #require(CGContext(data: nil, width: Int(size.width), height: Int(size.height),
+            bitsPerComponent: 8, bytesPerRow: Int(size.width) * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.clear(CGRect(origin: .zero, size: size))
+        context.setFillColor(CGColor(red: 0, green: 1, blue: 0, alpha: 1))
+        context.fill(fill)
+        let image = try #require(context.makeImage())
+        session.insert(ImportedImage(image: image, thumbnail: image, name: "Island layer"))
+    }
+
     private func insertPaintedLayer(into session: EditorSession) throws {
         let size = try #require(session.document?.size)
         let context = try #require(CGContext(data: nil, width: Int(size.width), height: Int(size.height),
