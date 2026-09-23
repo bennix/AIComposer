@@ -3,13 +3,13 @@
   <channel>
     <title>AIComposer</title>
     <item>
-      <title>Version 1.2.3</title>
-      <pubDate>Tue, 22 Sep 2026 23:46:32 +0000</pubDate>
-      <sparkle:version>18</sparkle:version>
-      <sparkle:shortVersionString>1.2.3</sparkle:shortVersionString>
+      <title>Version 1.2.4</title>
+      <pubDate>Wed, 23 Sep 2026 00:39:23 +0000</pubDate>
+      <sparkle:version>19</sparkle:version>
+      <sparkle:shortVersionString>1.2.4</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.5</sparkle:minimumSystemVersion>
-      <link>https://github.com/bennix/AIComposer/releases/tag/v1.2.3</link>
-      <enclosure url="https://github.com/bennix/AIComposer/releases/download/v1.2.3/Compositor-1.2.3.dmg" sparkle:edSignature="xqg1i0l8P1LNNKi5x2ld0/yTnS4wdbyj77S01D+Fkm6SEBC0ZkTa3MK7VLI+6nFusWJ2uZCf6L3u0eAIJijBBw==" length="8345205" type="application/octet-stream"/>
+      <link>https://github.com/bennix/AIComposer/releases/tag/v1.2.4</link>
+      <enclosure url="https://github.com/bennix/AIComposer/releases/download/v1.2.4/Compositor-1.2.4.dmg" sparkle:edSignature="6xrXIDCc7+OTaC87Y2WHbOU4GLCPSZ3IDgrP5McR+LJcHsvjEYqvTfOOPDF+UOehn15g6cTXKd8U98lJGYqyAg==" length="8410544" type="application/octet-stream"/>
     </item>
   </channel>
 </rss>
