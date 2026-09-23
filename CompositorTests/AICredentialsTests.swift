@@ -28,6 +28,16 @@ struct AICredentialsTests {
         #expect(try store.load() == .empty)
     }
 
+    @Test func missingMultimodalModelUsesDefault() throws {
+        let json = #"{"baseURL":"https://zenmux.ai/api/v1","apiKey":"k","defaultModel":"qwen/qwen-image-3.0-pro"}"#
+        let loaded = try JSONDecoder().decode(AICredentials.self, from: Data(json.utf8))
+        #expect(loaded.multimodalModel == AICredentials.defaultMultimodalModel)
+        #expect(loaded.effectiveMultimodalModel == AICredentials.defaultMultimodalModel)
+        var cleared = loaded
+        cleared.multimodalModel = "  "
+        #expect(cleared.effectiveMultimodalModel == AICredentials.defaultMultimodalModel)
+    }
+
     @Test func inviteLinkAcceptsURLOrCode() {
         #expect(ZenMuxInvite.url(from: "https://zenmux.ai/invite/C2GQ97")?.absoluteString == "https://zenmux.ai/invite/C2GQ97")
         #expect(ZenMuxInvite.url(from: "C2GQ97")?.absoluteString == "https://zenmux.ai/invite/C2GQ97")

@@ -26,6 +26,32 @@ struct AIImageClientTests {
         #expect(url.absoluteString == "https://zenmux.ai/api/vertex-ai/v1/publishers/google/models/gemini-3.1-flash-lite-image:generateContent")
     }
 
+    @Test func parsesRecognizedTextJSONAndFences() throws {
+        let recognized = try AIRecognizedText.parse("""
+        ```json
+        {"content":"Visualization behavior","fontName":"Helvetica","fontSize":48,"alignment":"center","color":"#101010"}
+        ```
+        """)
+        #expect(recognized.content == "Visualization behavior")
+        #expect(recognized.fontName == "Helvetica")
+        #expect(recognized.fontSize == 48)
+        #expect(recognized.alignment == .center)
+        #expect(abs((recognized.red ?? -1) - 16.0 / 255.0) < 0.001)
+        let style = recognized.style(box: CGSize(width: 400, height: 64))
+        #expect(style.content == "Visualization behavior")
+        #expect(style.alignment == .center)
+        #expect(style.boxSize == CGSize(width: 400, height: 64))
+        #expect(try AIRecognizedText.parse("just the letters").content == "just the letters")
+        #expect(throws: (any Error).self) { try AIRecognizedText.parse(#"{"content":""}"#) }
+    }
+
+    @Test func parsesChatCompletionContent() throws {
+        let payload = #"{"choices":[{"message":{"content":"{\"content\":\"Hello\"}"}}]}"#.data(using: .utf8)!
+        #expect(try AIRecognizedText.parseChatContent(payload) == #"{"content":"Hello"}"#)
+        let parts = #"{"choices":[{"message":{"content":[{"type":"text","text":"{\"content\":\"Hi\"}"}]}}]}"#.data(using: .utf8)!
+        #expect(try AIRecognizedText.parseChatContent(parts).contains("Hi"))
+    }
+
     @Test func httpErrorReadsNestedMessage() {
         let data = #"{"error":{"message":"invalid api key"}}"#.data(using: .utf8)!
         #expect(AIImageClient.message(from: data, status: 401) == "invalid api key")
@@ -33,10 +59,12 @@ struct AIImageClientTests {
 
     @Test func combinedPromptKeepsGenerateTextAndPrefixesEdits() {
         #expect(AIImagePipeline.combinedPrompt(kind: .generate, extra: "  a cat  ") == "a cat")
-        #expect(AIImagePipeline.combinedPrompt(kind: .fill, extra: "").contains("Fill the transparent"))
+        let fill = AIImagePipeline.combinedPrompt(kind: .fill, extra: "")
+        #expect(fill.contains(L10n.t("ai.prompt.fill")) || fill.contains("Fill the transparent"))
         #expect(AIImagePipeline.combinedPrompt(kind: .restyle, extra: "oil").contains("Additional instruction: oil"))
-        #expect(AIImagePipeline.combinedPrompt(kind: .expand, extra: "").contains("inner rectangle")
-            || AIImagePipeline.combinedPrompt(kind: .expand, extra: "").contains("ai.prompt.expandSeam"))
+        let expand = AIImagePipeline.combinedPrompt(kind: .expand, extra: "")
+        #expect(expand.contains(L10n.t("ai.prompt.expandSeam")) || expand.contains("inner rectangle")
+            || expand.contains("ai.prompt.expandSeam"))
         #expect(AIImageSize.matching(width: 1600, height: 1000) == .landscape)
         #expect(AIImageSize.matching(width: 1000, height: 1600) == .portrait)
         #expect(AIImageSize.matching(width: 1024, height: 1024) == .square)
@@ -70,6 +98,22 @@ nonisolated private struct StubSession: AIURLSessioning {
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
         return (data, response)
+    }
+}
+
+struct AIImageClientRecognizeTests {
+    @Test func recognizeTextPostsChatCompletions() async throws {
+        let payload = #"{"choices":[{"message":{"content":"{\"content\":\"Visualization behavior\",\"alignment\":\"left\"}"}}]}"#.data(using: .utf8)!
+        let client = AIImageClient(session: StubSession(data: payload, status: 200), timeout: 2)
+        let credentials = AICredentials(
+            baseURL: "https://zenmux.ai/api/v1",
+            apiKey: "k",
+            defaultModel: AIImageModel.gptImage.rawValue,
+            multimodalModel: "google/gemini-3.8-flash"
+        )
+        let recognized = try await client.recognizeText(credentials: credentials, imagePNG: Data([0x89, 0x50, 0x4E, 0x47]))
+        #expect(recognized.content == "Visualization behavior")
+        #expect(recognized.alignment == .left)
     }
 }
 

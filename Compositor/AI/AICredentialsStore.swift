@@ -8,8 +8,11 @@ nonisolated struct AICredentials: Codable, Equatable, Sendable {
     var defaultModel: String
     /// Invite URL or code from ZenMux. Used only when the user has no API key yet.
     var inviteLink: String = ""
+    /// ZenMux chat/completions slug for vision (OCR, convert graphic type to live text).
+    var multimodalModel: String = defaultMultimodalModel
 
     static let defaultBaseURL = "https://zenmux.ai/api/v1"
+    static let defaultMultimodalModel = "google/gemini-3.8-flash"
 
     static var empty: AICredentials {
         AICredentials(baseURL: defaultBaseURL, apiKey: "", defaultModel: AIImageModel.gptImage.rawValue)
@@ -20,8 +23,15 @@ nonisolated struct AICredentials: Codable, Equatable, Sendable {
             baseURL: baseURL.trimmingCharacters(in: .whitespacesAndNewlines),
             apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
             defaultModel: defaultModel.trimmingCharacters(in: .whitespacesAndNewlines),
-            inviteLink: inviteLink.trimmingCharacters(in: .whitespacesAndNewlines)
+            inviteLink: inviteLink.trimmingCharacters(in: .whitespacesAndNewlines),
+            multimodalModel: multimodalModel.trimmingCharacters(in: .whitespacesAndNewlines)
         )
+    }
+
+    /// Empty field falls back to the built-in vision default so old settings still work.
+    var effectiveMultimodalModel: String {
+        let name = trimmed.multimodalModel
+        return name.isEmpty ? Self.defaultMultimodalModel : name
     }
 
     var hasAPIKey: Bool { !trimmed.apiKey.isEmpty }
@@ -32,13 +42,15 @@ nonisolated struct AICredentials: Codable, Equatable, Sendable {
         return URL(string: text)
     }
 
-    enum CodingKeys: String, CodingKey { case baseURL, apiKey, defaultModel, inviteLink }
+    enum CodingKeys: String, CodingKey { case baseURL, apiKey, defaultModel, inviteLink, multimodalModel }
 
-    init(baseURL: String, apiKey: String, defaultModel: String, inviteLink: String = "") {
+    init(baseURL: String, apiKey: String, defaultModel: String, inviteLink: String = "",
+         multimodalModel: String = defaultMultimodalModel) {
         self.baseURL = baseURL
         self.apiKey = apiKey
         self.defaultModel = defaultModel
         self.inviteLink = inviteLink
+        self.multimodalModel = multimodalModel
     }
 
     init(from decoder: Decoder) throws {
@@ -47,6 +59,7 @@ nonisolated struct AICredentials: Codable, Equatable, Sendable {
         apiKey = try container.decodeIfPresent(String.self, forKey: .apiKey) ?? ""
         defaultModel = try container.decodeIfPresent(String.self, forKey: .defaultModel) ?? AIImageModel.gptImage.rawValue
         inviteLink = try container.decodeIfPresent(String.self, forKey: .inviteLink) ?? ""
+        multimodalModel = try container.decodeIfPresent(String.self, forKey: .multimodalModel) ?? Self.defaultMultimodalModel
     }
 }
 

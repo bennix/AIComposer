@@ -153,6 +153,24 @@ struct TypeToolTests {
         #expect(session.textDraft == nil)
     }
 
+    @Test func formatBarSitsAboveTheTextAndDropsBelowWhenThereIsNoRoom() {
+        let bar = CGSize(width: 260, height: 36)
+        let canvas = CGSize(width: 800, height: 600)
+        let above = TextFormatBarPlacement.frame(
+            bar: bar, around: CGRect(x: 200, y: 200, width: 160, height: 80), in: canvas
+        )
+        #expect(above.maxY <= 200)
+        #expect(above.midX >= 200 && above.midX <= 360)
+        let top = TextFormatBarPlacement.frame(
+            bar: bar, around: CGRect(x: 40, y: 4, width: 120, height: 40), in: canvas
+        )
+        #expect(top.minY >= 44)
+        let edge = TextFormatBarPlacement.frame(
+            bar: bar, around: CGRect(x: 0, y: 200, width: 40, height: 20), in: canvas
+        )
+        #expect(edge.minX >= 8)
+    }
+
     @Test func oldProjectsDecodeWithoutWarpKeys() throws {
         let json = """
         {"content":"Hello","fontName":"Helvetica","fontSize":48,"red":1,"green":0,"blue":0,"alignment":"Left","tracking":0,"leading":0}

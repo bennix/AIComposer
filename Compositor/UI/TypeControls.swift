@@ -98,6 +98,81 @@ struct TypeControls: View {
     }
 }
 
+/// Compact face / size / alignment strip shown next to the live text box.
+struct TextObjectFormatBar: View {
+    @Bindable var session: EditorSession
+    private func value<T>(_ key: WritableKeyPath<LayerTextStyle, T>) -> Binding<T> {
+        Binding(get: { session.currentTextStyle[keyPath: key] }, set: { value in
+            session.changeTextStyle { $0[keyPath: key] = value }
+        })
+    }
+    private func number(_ key: WritableKeyPath<LayerTextStyle, CGFloat>) -> Binding<Double> {
+        Binding(get: { Double(session.currentTextStyle[keyPath: key]) }, set: { value in
+            session.changeTextStyle { $0[keyPath: key] = CGFloat(value) }
+        })
+    }
+    var body: some View {
+        HStack(spacing: 8) {
+            TypeFacePicker(fontName: value(\.fontName))
+                .frame(width: 108)
+                .help(L10n.t("Typeface style — Regular, Bold, Italic, and other installed faces"))
+                .accessibilityLabel(L10n.t("Typeface"))
+            TypeSizePicker(size: Binding(
+                get: { session.currentTextStyle.fontSize },
+                set: { size in session.changeTextStyle { $0.fontSize = min(2000, max(1, size)) } }
+            ))
+            .help(L10n.t("Font size"))
+            HStack(spacing: 1) {
+                ForEach(TextAlignment.allCases, id: \.self) { alignment in
+                    let selected = session.currentTextStyle.alignment == alignment
+                    Button {
+                        session.changeTextStyle { $0.alignment = alignment }
+                    } label: {
+                        Image(systemName: alignment == .left ? "text.alignleft" : alignment == .center ? "text.aligncenter" : "text.alignright")
+                            .frame(width: 26, height: 22)
+                            .background(selected ? Color.primary.opacity(0.12) : .clear,
+                                        in: RoundedRectangle(cornerRadius: 4))
+                            .contentShape(RoundedRectangle(cornerRadius: 4))
+                    }
+                    .buttonStyle(.plain)
+                    .help(L10n.t("Align " + alignment.rawValue.lowercased()))
+                    .accessibilityLabel(L10n.t("Align " + alignment.rawValue.lowercased()))
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.regularMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(.white.opacity(0.18), lineWidth: 1))
+        .shadow(color: .black.opacity(0.28), radius: 8, y: 2)
+    }
+}
+
+/// Axis-aligned box of a possibly rotated text editor, then a slot above it (or below if there is no room).
+enum TextFormatBarPlacement {
+    static func frame(bar: CGSize, around aabb: CGRect, in canvas: CGSize, gap: CGFloat = 10) -> CGRect {
+        var origin = CGPoint(x: aabb.midX - bar.width / 2, y: aabb.minY - gap - bar.height)
+        if origin.y < 8 { origin.y = aabb.maxY + gap }
+        origin.x = min(max(8, origin.x), max(8, canvas.width - bar.width - 8))
+        origin.y = min(max(8, origin.y), max(8, canvas.height - bar.height - 8))
+        return CGRect(origin: origin, size: bar)
+    }
+
+    static func aabb(of view: NSView, in canvas: NSView) -> CGRect {
+        let corners = [
+            CGPoint(x: view.bounds.minX, y: view.bounds.minY),
+            CGPoint(x: view.bounds.maxX, y: view.bounds.minY),
+            CGPoint(x: view.bounds.maxX, y: view.bounds.maxY),
+            CGPoint(x: view.bounds.minX, y: view.bounds.maxY)
+        ].map { view.convert($0, to: canvas) }
+        let xs = corners.map(\.x), ys = corners.map(\.y)
+        return CGRect(x: xs.min() ?? 0, y: ys.min() ?? 0,
+                      width: (xs.max() ?? 0) - (xs.min() ?? 0),
+                      height: (ys.max() ?? 0) - (ys.min() ?? 0))
+    }
+}
+
 /// Keep the installed-font catalog out of SwiftUI's per-keystroke view updates.
 /// The closed control needs only the current name; populate its menu on demand.
 private final class FixedWidthPopUpButton: NSPopUpButton {
@@ -172,7 +247,7 @@ private struct TypeFamilyPicker: NSViewRepresentable {
     }
 }
 
-private struct TypeFacePicker: NSViewRepresentable {
+struct TypeFacePicker: NSViewRepresentable {
     @Binding var fontName: String
     @Environment(\.isEnabled) private var isEnabled
 
@@ -240,6 +315,62 @@ private struct TypeFacePicker: NSViewRepresentable {
             guard let name = button.selectedItem?.representedObject as? String,
                   name != fontName.wrappedValue else { return }
             fontName.wrappedValue = name
+        }
+    }
+}
+
+struct TypeSizePicker: NSViewRepresentable {
+    @Binding var size: CGFloat
+    @Environment(\.isEnabled) private var isEnabled
+    static let presets: [CGFloat] = [8, 10, 12, 14, 18, 24, 36, 48, 72, 96, 144, 200]
+
+    func makeCoordinator() -> Coordinator { Coordinator(size: $size) }
+
+    func makeNSView(context: Context) -> NSPopUpButton {
+        let button = FixedWidthPopUpButton(frame: .zero, pullsDown: false)
+        button.borderShape = .capsule
+        button.setAccessibilityLabel(L10n.t("Font size"))
+        button.target = context.coordinator
+        button.action = #selector(Coordinator.choose(_:))
+        button.menu?.delegate = context.coordinator
+        context.coordinator.reload(button, selected: size)
+        return button
+    }
+
+    func updateNSView(_ button: NSPopUpButton, context: Context) {
+        context.coordinator.size = $size
+        button.isEnabled = isEnabled
+        guard !context.coordinator.tracking else { return }
+        context.coordinator.reload(button, selected: size)
+    }
+
+    final class Coordinator: NSObject, NSMenuDelegate {
+        var size: Binding<CGFloat>
+        var tracking = false
+        init(size: Binding<CGFloat>) { self.size = size }
+        func menuWillOpen(_ menu: NSMenu) { tracking = true }
+        func menuDidClose(_ menu: NSMenu) { tracking = false }
+
+        func reload(_ button: NSPopUpButton, selected: CGFloat) {
+            var values = TypeSizePicker.presets
+            if !values.contains(where: { abs($0 - selected) < 0.01 }) {
+                values.append(selected)
+                values.sort()
+            }
+            button.removeAllItems()
+            for value in values {
+                let title = value.rounded() == value ? "\(Int(value))" : String(format: "%.1f", value)
+                button.addItem(withTitle: title)
+                button.itemArray.last?.representedObject = value
+            }
+            if let index = values.firstIndex(where: { abs($0 - selected) < 0.01 }) {
+                button.selectItem(at: index)
+            }
+        }
+
+        @objc func choose(_ button: NSPopUpButton) {
+            guard let value = button.selectedItem?.representedObject as? CGFloat else { return }
+            if abs(value - size.wrappedValue) > 0.01 { size.wrappedValue = value }
         }
     }
 }

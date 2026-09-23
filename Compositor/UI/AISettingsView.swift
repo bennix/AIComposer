@@ -94,13 +94,20 @@ struct AISettingsView: View {
                 }
                 .accessibilityIdentifier("aiDefaultModel")
             }
+            Section("Multimodal model") {
+                TextField("Model name", text: $settings.credentials.multimodalModel)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier("aiMultimodalModel")
+                Text("ZenMux chat/completions slug for vision tasks such as converting graphic type into editable text. Example: google/gemini-3.8-flash")
+                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
             Section("Verification") {
                 Text("Key testing is available now. Per-model live checks can be added here later without changing how the key is stored.")
                     .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 520, minHeight: 420)
+        .frame(minWidth: 520, minHeight: 500)
         .padding()
         .onAppear { settings.load() }
     }

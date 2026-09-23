@@ -298,6 +298,18 @@ add("Accepts `https://zenmux.ai/invite/…` or a bare invite code. After signup,
     "`https://zenmux.ai/invite/…` または招待コードを入力できます。登録後、zenmux.ai/settings/keys でキーを作成します。",
     "`https://zenmux.ai/invite/…` 또는 초대 코드를 입력하세요. 가입 후 zenmux.ai/settings/keys에서 키를 만듭니다.")
 add("Default model", "默认模型", "預設模型", "デフォルトモデル", "기본 모델")
+add("Multimodal model", "多模态模型", "多模態模型", "マルチモーダルモデル", "멀티모달 모델")
+add("Model name", "模型名称", "模型名稱", "モデル名", "모델 이름")
+add("ZenMux chat/completions slug for vision tasks such as converting graphic type into editable text. Example: google/gemini-3.8-flash",
+    "ZenMux chat/completions 上的视觉模型名称，用于把图形文字识别成可编辑文字。例如 google/gemini-3.8-flash",
+    "ZenMux chat/completions 上的視覺模型名稱，用於把圖形文字辨識成可編輯文字。例如 google/gemini-3.8-flash",
+    "図形文字を編集可能なテキストに変換する視覚モデルのZenMux chat/completionsスラッグ。例: google/gemini-3.8-flash",
+    "그래픽 글자를 편집 가능한 텍스트로 변환하는 비전 작업용 ZenMux chat/completions 모델 이름. 예: google/gemini-3.8-flash")
+add("Uses the multimodal model from Settings.",
+    "使用设置中的多模态模型。",
+    "使用設定中的多模態模型。",
+    "設定のマルチモーダルモデルを使います。",
+    "설정의 멀티모달 모델을 사용합니다.")
 add("Verification", "验证", "驗證", "検証", "검증")
 add("Key testing is available now. Per-model live checks can be added here later without changing how the key is stored.",
     "现在可以测试密钥。以后可在此添加分模型验证，无需改动密钥存储方式。",
@@ -359,6 +371,27 @@ add("Fill Selection", "选区补全", "選取補全", "選択範囲を埋める"
 add("Remove Object", "去除物体", "去除物件", "オブジェクトを除去", "객체 제거")
 add("Remove Handwriting", "去除手写", "去除手寫", "手書きを除去", "손글씨 제거")
 add("Remove Text", "去除文字", "去除文字", "文字を除去", "텍스트 제거")
+add("Convert to Editable Text", "识别为可编辑文字", "辨識為可編輯文字", "編集可能なテキストに変換", "편집 가능한 텍스트로 변환")
+add("Optional: language, font family, or what the letters should read",
+    "可选：语言、字体，或这些字应读成什么",
+    "可選：語言、字體，或這些字應讀成什麼",
+    "任意：言語、フォント、または文字の読み",
+    "선택: 언어, 서체, 또는 글자가 읽혀야 할 내용")
+add("Reads the selected graphic type or selection with the multimodal model and replaces it with live, editable text.",
+    "用多模态模型识别选中的图形文字或选区，并替换成可继续编辑的文字对象。",
+    "用多模態模型辨識選中的圖形文字或選取範圍，並替換成可繼續編輯的文字物件。",
+    "マルチモーダルモデルで選択した図形文字または範囲を読み取り、編集可能なテキストに置き換えます。",
+    "멀티모달 모델로 선택한 그래픽 글자 또는 선택 영역을 읽어 편집 가능한 텍스트로 바꿉니다.")
+add("The selected type is already editable text.",
+    "选中的已是可编辑文字。",
+    "選中的已是可編輯文字。",
+    "選択した文字はすでに編集可能です。",
+    "선택한 글자는 이미 편집 가능한 텍스트입니다.")
+add("The multimodal model returned no readable text. Try another model or a tighter selection.",
+    "多模态模型没有读出文字。请换一个模型，或缩小选区后再试。",
+    "多模態模型沒有讀出文字。請換一個模型，或縮小選取範圍後再試。",
+    "マルチモーダルモデルが文字を読み取れませんでした。別のモデルか、より狭い選択で試してください。",
+    "멀티모달 모델이 글자를 읽지 못했습니다. 다른 모델을 쓰거나 선택 영역을 좁혀 보세요.")
 add("Replace Background", "替换背景", "取代背景", "背景を置き換え", "배경 교체")
 add("Replace Sky", "替换天空", "取代天空", "空を置き換え", "하늘 교체")
 add("Weather / Time", "天气 / 时段", "天氣 / 時段", "天候 / 時間帯", "날씨 / 시간대")

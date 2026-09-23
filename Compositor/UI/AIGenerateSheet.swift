@@ -39,9 +39,14 @@ struct AIStudioSheet: View {
                     }
                 }
             }
-            Picker("Model", selection: $model) {
-                ForEach(AIImageModel.allCases) { item in
-                    Text(item.title).tag(item)
+            if kind.usesMultimodal {
+                Text("Uses the multimodal model from Settings.")
+                    .font(.callout).foregroundStyle(.secondary)
+            } else {
+                Picker("Model", selection: $model) {
+                    ForEach(AIImageModel.allCases) { item in
+                        Text(item.title).tag(item)
+                    }
                 }
             }
             if kind.showsSizePicker {

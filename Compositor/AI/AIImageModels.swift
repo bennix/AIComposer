@@ -76,6 +76,7 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
     case restyle, sketch, colorize, relight, enhance, cleanup, restore
     case fill, removeObject, handwriting, removeText
     case replaceBackground, replaceSky, weather, recolor, material, harmonize, shadow
+    case recognizeText
     case expand
 
     var id: String { rawValue }
@@ -95,7 +96,7 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .generate, .pattern, .poster: .none
         case .variation: .canvas
-        case .fill, .removeObject: .selection
+        case .fill, .removeObject, .recognizeText: .selection
         case .expand: .expand
         default: .canvasOrSelection
         }
@@ -125,6 +126,7 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
         case .material: L10n.t("Change Material")
         case .harmonize: L10n.t("Harmonize")
         case .shadow: L10n.t("Contact Shadow")
+        case .recognizeText: L10n.t("Convert to Editable Text")
         case .expand: L10n.t("Generative Expand")
         }
     }
@@ -153,6 +155,7 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
         case .material: "AI Material"
         case .harmonize: "AI Harmonize"
         case .shadow: "AI Shadow"
+        case .recognizeText: "AI Type"
         case .expand: "AI Expand"
         }
     }
@@ -182,6 +185,7 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
         case .harmonize: L10n.t("Optional: match a cooler moonlight grade")
         case .shadow: L10n.t("Optional: longer late-afternoon shadow")
         case .expand: L10n.t("Optional: what the new borders should become")
+        case .recognizeText: L10n.t("Optional: language, font family, or what the letters should read")
         }
     }
 
@@ -210,6 +214,7 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
         case .harmonize: L10n.t("Matches lighting and color so a composite looks like one photograph.")
         case .shadow: L10n.t("Adds a grounded contact shadow under the subject.")
         case .expand: L10n.t("Grows the canvas and paints the new borders so they continue the picture.")
+        case .recognizeText: L10n.t("Reads the selected graphic type or selection with the multimodal model and replaces it with live, editable text.")
         }
     }
 
@@ -236,6 +241,7 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
         case .harmonize: L10n.t("ai.prompt.harmonize")
         case .shadow: L10n.t("ai.prompt.shadow")
         case .expand: L10n.t("ai.prompt.expand")
+        case .recognizeText: ""
         }
     }
 
@@ -256,6 +262,9 @@ nonisolated enum AISheetKind: String, CaseIterable, Identifiable, Sendable {
     var upscaleFactor: CGFloat { self == .enhance ? 2 : 1 }
 
     var needsSelection: Bool { input == .selection }
+
+    /// Vision / chat completions instead of an image model.
+    var usesMultimodal: Bool { self == .recognizeText }
 
     /// Selected objects are kept; the model paints the environment around them.
     var invertsObjectMask: Bool {
@@ -286,6 +295,7 @@ nonisolated enum AIImageError: LocalizedError {
     case noSelection
     case emptyPrompt
     case noImageInResponse
+    case noTextInResponse
     case http(Int, String)
     case transport(String)
 
@@ -295,6 +305,7 @@ nonisolated enum AIImageError: LocalizedError {
         case .noSelection: L10n.t("Draw a selection or select one or more objects first, then run this command.")
         case .emptyPrompt: L10n.t("Enter a prompt describing what you want.")
         case .noImageInResponse: L10n.t("The model returned no image. Try another model or a shorter prompt.")
+        case .noTextInResponse: L10n.t("The multimodal model returned no readable text. Try another model or a tighter selection.")
         case .http(_, let message): message
         case .transport(let message): message
         }

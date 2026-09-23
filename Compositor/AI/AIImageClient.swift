@@ -143,6 +143,25 @@ nonisolated struct AIImageClient: Sendable {
         return try Self.parseVertexImage(data)
     }
 
+    func recognizeText(credentials: AICredentials, imagePNG: Data, extra: String = "") async throws -> AIRecognizedText {
+        let value = credentials.trimmed
+        guard let base = value.endpoint else { throw AICredentialError.invalidURL }
+        guard value.hasAPIKey else { throw AICredentialError.missingKey }
+        var http = URLRequest(url: base.appending(path: "chat/completions"))
+        http.httpMethod = "POST"
+        http.setValue("Bearer \(value.apiKey)", forHTTPHeaderField: "Authorization")
+        http.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        http.timeoutInterval = timeout
+        http.httpBody = try JSONSerialization.data(withJSONObject: AIRecognizedText.chatBody(
+            model: value.effectiveMultimodalModel,
+            imagePNG: imagePNG,
+            extra: extra
+        ))
+        let (data, response) = try await session.data(for: http)
+        try Self.throwIfFailed(data: data, response: response)
+        return try AIRecognizedText.parse(AIRecognizedText.parseChatContent(data))
+    }
+
     /// Background photograph, same-size selection mask, and the edit prompt in one request.
     static func vertexParts(_ request: AIImageRequest) -> [[String: Any]] {
         var parts: [[String: Any]] = []

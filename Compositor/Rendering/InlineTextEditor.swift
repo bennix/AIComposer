@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 /// A native text system on the canvas: selection, marked text/IME, clipboard and local undo
 /// stay with NSTextView. Its logical bounds are layer pixels; the containing view supplies zoom.
@@ -386,6 +387,7 @@ extension CanvasView {
                 needsDisplay = true
                 if hadFocus { window?.makeFirstResponder(self) }
             }
+            hideTextFormatBar()
             return
         }
         if inlineTextEditor?.draftID != draft.id { needsDisplay = true }
@@ -396,6 +398,29 @@ extension CanvasView {
             needsDisplay = true
         }
         inlineTextEditor?.synchronize(draft)
+        showTextFormatBar(around: inlineTextEditor)
+    }
+
+    func hideTextFormatBar() {
+        textFormatBar?.removeFromSuperview()
+        textFormatBar = nil
+    }
+
+    func showTextFormatBar(around editor: InlineTextEditor?) {
+        guard let editor, !editor.isHidden else { hideTextFormatBar(); return }
+        if textFormatBar == nil {
+            let host = NSHostingView(rootView: TextObjectFormatBar(session: session))
+            host.wantsLayer = true
+            host.setAccessibilityLabel(L10n.t("Text formatting"))
+            textFormatBar = host
+            addSubview(host)
+        }
+        let host = textFormatBar!
+        host.layoutSubtreeIfNeeded()
+        let fitted = host.fittingSize
+        let size = CGSize(width: max(260, fitted.width), height: max(34, fitted.height))
+        let aabb = TextFormatBarPlacement.aabb(of: editor, in: self)
+        host.frame = TextFormatBarPlacement.frame(bar: size, around: aabb, in: bounds.size)
     }
 
     func beginTextGesture(at point: CGPoint, event: NSEvent) {

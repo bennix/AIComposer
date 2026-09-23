@@ -71,15 +71,6 @@ extension EditorSession {
             importError = AICredentialError.missingKey.localizedDescription
             return
         }
-        let combined = AIImagePipeline.combinedPrompt(
-            kind: kind,
-            extra: prompt,
-            hasSelection: hasAIEditRegion(for: kind)
-        )
-        if kind.requiresPrompt && combined.isEmpty {
-            importError = AIImageError.emptyPrompt.localizedDescription
-            return
-        }
         if kind.needsSelection, !hasAIEditRegion(for: kind) {
             importError = AIImageError.noSelection.localizedDescription
             return
@@ -95,6 +86,19 @@ extension EditorSession {
         }
         do {
             let client = AIImageClient()
+            if kind == .recognizeText {
+                try await runAIRecognizeText(extra: prompt, credentials: credentials, client: client)
+                return
+            }
+            let combined = AIImagePipeline.combinedPrompt(
+                kind: kind,
+                extra: prompt,
+                hasSelection: hasAIEditRegion(for: kind)
+            )
+            if kind.requiresPrompt && combined.isEmpty {
+                importError = AIImageError.emptyPrompt.localizedDescription
+                return
+            }
             switch kind.input {
             case .none:
                 let image = try await client.generate(AIImageRequest(
@@ -333,6 +337,104 @@ extension EditorSession {
             opacity: target.opacity, blendMode: target.blendMode,
             mask: target.mask, maskSourceID: target.maskSourceID,
             adjustment: target.adjustment, shape: target.shape
+        )
+    }
+
+    private func runAIRecognizeText(
+        extra: String,
+        credentials: AICredentials,
+        client: AIImageClient
+    ) async throws {
+        if let selection, !selection.isEmpty, let snapshot = projectSnapshot() {
+            let raster = try await ImageExporter.shared.render(snapshot)
+            let work = try AIImagePipeline.workImage(canvas: raster.image, selection: selection)
+            let style = try await recognizeStyle(
+                from: work.image,
+                box: CGSize(width: work.image.width, height: work.image.height),
+                extra: extra,
+                credentials: credentials,
+                client: client
+            )
+            let image = try Self.textImage(style)
+            aiSheet = nil
+            addPixelLayer(
+                image,
+                at: work.origin,
+                name: Self.layerName(for: style.content),
+                editName: AISheetKind.recognizeText.layerName,
+                text: LayerText(style: style, image: image)
+            )
+            editActiveText()
+            return
+        }
+        let targets = aiEditableLayers().filter { $0.liveText == nil && $0.asset != nil }
+        guard !targets.isEmpty else {
+            if aiEditableLayers().contains(where: { $0.liveText != nil }) {
+                throw AIImageError.transport(L10n.t("The selected type is already editable text."))
+            }
+            throw AIImageError.noSelection
+        }
+        var converted: [(ImageLayer, LayerTextStyle)] = []
+        for target in targets {
+            guard let image = target.asset?.image else { continue }
+            let style = try await recognizeStyle(
+                from: image,
+                box: target.transform.size,
+                extra: extra,
+                credentials: credentials,
+                client: client
+            )
+            converted.append((target, style))
+        }
+        guard !converted.isEmpty else { throw AIImageError.noTextInResponse }
+        aiSheet = nil
+        beginEdit(AISheetKind.recognizeText.layerName)
+        for (layer, style) in converted {
+            try writeLiveText(on: layer, style: style)
+        }
+        endEdit()
+        if let first = converted.first {
+            selectLayer(first.0.id)
+            editActiveText()
+        }
+    }
+
+    private func recognizeStyle(
+        from image: CGImage,
+        box: CGSize,
+        extra: String,
+        credentials: AICredentials,
+        client: AIImageClient
+    ) async throws -> LayerTextStyle {
+        let send = try AIImagePipeline.scaledForUpload(image)
+        let recognized = try await client.recognizeText(
+            credentials: credentials,
+            imagePNG: AIImagePipeline.pngData(from: send),
+            extra: extra
+        )
+        return recognized.style(box: box, fallbackColor: AIRecognizedText.sampleOpaqueColor(from: image))
+    }
+
+    private func writeLiveText(on layer: ImageLayer, style: LayerTextStyle) throws {
+        guard let index = document?.layers.firstIndex(where: { $0.id == layer.id }) else { return }
+        let image = try Self.textImage(style)
+        let thumbnail = try PixelInvert.thumbnail(of: image)
+        document?.layers[index] = ImageLayer(
+            id: layer.id,
+            asset: ImportedImage(image: image, thumbnail: thumbnail, name: Self.layerName(for: style.content)),
+            name: Self.layerName(for: style.content),
+            isVisible: layer.isVisible,
+            transform: layer.transform,
+            parentID: layer.parentID,
+            isGroup: false,
+            opacity: layer.opacity,
+            blendMode: layer.blendMode,
+            mask: layer.mask,
+            maskSourceID: layer.maskSourceID,
+            adjustment: nil,
+            shape: nil,
+            effects: layer.effects,
+            text: LayerText(style: style, image: image)
         )
     }
 

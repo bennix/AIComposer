@@ -18,6 +18,7 @@ struct EditorCanvas: NSViewRepresentable {
 
 final class CanvasView: NSView {
     var inlineTextEditor: InlineTextEditor?
+    var textFormatBar: NSHostingView<TextObjectFormatBar>?
     var textBoxAnchor: CGPoint?
     var textBoxRect: CGRect?
     private var lastFocusRequest = 0
