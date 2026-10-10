@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>AIComposer</title>
+    <item>
+      <title>Version 2.0.0</title>
+      <pubDate>Sat, 10 Oct 2026 11:36:49 +0000</pubDate>
+      <sparkle:version>21</sparkle:version>
+      <sparkle:shortVersionString>2.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.5</sparkle:minimumSystemVersion>
+      <link>https://github.com/bennix/AIComposer/releases/tag/v2.0.0</link>
+      <enclosure url="https://github.com/bennix/AIComposer/releases/download/v2.0.0/Compositor-2.0.0.dmg" sparkle:edSignature="+Z+apCF9/00aGNa/hvtbKuG8ge6CsjJZlHbJquOpyUxkAgR290RidPLqVlE1ddiooX1pFozcGxfE31xzHJftBQ==" length="8046792" type="application/octet-stream"/>
+    </item>
+  </channel>
+</rss>
