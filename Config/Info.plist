@@ -46,9 +46,9 @@
     </array>
     <!-- Sparkle updates for AIComposer — not the upstream Compositor feed. -->
     <key>SUFeedURL</key>
-    <string>https://bennix.github.io/AIComposer/appcast.xml</string>
+    <string>https://bennix.github.io/AIComposer/appcast-v2.xml</string>
     <key>SUPublicEDKey</key>
-    <string>sYZX4aItKQg0CvVYtZB130Zxo0+UbvwiR6oVeJXksxs=</string>
+    <string>1M95V8ek2BJAYJaTBgpwld8us660eEk3vRIfwNjR5Dg=</string>
     <key>SUEnableInstallerLauncherService</key>
     <true/>
     <key>UTExportedTypeDeclarations</key>

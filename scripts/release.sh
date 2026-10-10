@@ -5,7 +5,8 @@
 #   - a "Developer ID Application" certificate in the login keychain
 #   - notarization credentials saved once with:
 #       xcrun notarytool store-credentials "compositor-notary" --apple-id "zpxu@fudan.edu.cn" --team-id 5N66S29EK2
-#   - create-dmg (brew install create-dmg)
+#   - optionally the shell create-dmg tool (brew install create-dmg)
+#     hdiutil is used when it is unavailable or a different tool has the same name.
 # The DMG window background is scripts/dmg/dmg-bg.jpg (600 × 380, the window's exact size) plus
 # dmg-bg-retina.jpg (1200 × 760) for Retina displays.
 set -euo pipefail
@@ -69,14 +70,20 @@ if [[ -f "$LOW" && -f "$HIGH" ]]; then
 elif [[ -f "$LOW" ]]; then
   background=(--background "$LOW")
 fi
-create-dmg \
-  --volname "$APP" \
-  --window-pos 200 120 --window-size 600 380 \
-  --icon-size 128 --text-size 13 \
-  --icon "$APP.app" "$APP_X" "$ICON_Y" --hide-extension "$APP.app" \
-  --app-drop-link "$APPLICATIONS_X" "$ICON_Y" \
-  "${background[@]}" \
-  "$DMG" "$STAGE"
+if [[ "$(create-dmg --help 2>/dev/null || true)" == *--volname* ]]; then
+  create-dmg \
+    --volname "$APP" \
+    --window-pos 200 120 --window-size 600 380 \
+    --icon-size 128 --text-size 13 \
+    --icon "$APP.app" "$APP_X" "$ICON_Y" --hide-extension "$APP.app" \
+    --app-drop-link "$APPLICATIONS_X" "$ICON_Y" \
+    "${background[@]}" \
+    "$DMG" "$STAGE"
+else
+  echo "==> Using hdiutil for a standard drag-to-Applications DMG"
+  ln -s /Applications "$STAGE/Applications"
+  hdiutil create -volname "$APP" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
+fi
 
 echo "==> Signing and notarizing the DMG"
 codesign --sign "$IDENTITY" --timestamp "$DMG"

@@ -1,6 +1,6 @@
 #!/bin/zsh
 # Publishes the DMG that release.sh built: a GitHub Release (v<version>) on bennix/AIComposer,
-# then the Sparkle update feed (appcast.xml on main + GitHub Pages) pointing at it.
+# then the Sparkle update feed (appcast-v2.xml on main + GitHub Pages) pointing at it.
 #
 # Run release.sh first. Needs the Sparkle signing key in the login keychain and `gh` signed in.
 # Release notes: RELEASE_NOTES="…" ./scripts/publish.sh
@@ -30,10 +30,12 @@ fi
 echo "==> $APP $VERSION ($BUILD)"
 
 echo "==> Signing the update for Sparkle"
-signature=$("$SIGN_UPDATE" "$SOURCE")
+signature=$("$SIGN_UPDATE" --account aicomposer "$SOURCE")
 
 echo "==> Creating GitHub Release $TAG"
-gh release create "$TAG" "$SOURCE" --repo "$REPO" --title "AIComposer $VERSION" --notes "${RELEASE_NOTES:-AIComposer $VERSION}"
+NOTES_FILE="$WORK/release-notes.md"
+print -r -- "${RELEASE_NOTES:-AIComposer $VERSION}" > "$NOTES_FILE"
+gh release create "$TAG" "$SOURCE" --repo "$REPO" --target "$(git -C "$PROJECT_DIR" rev-parse HEAD)" --title "AIComposer $VERSION" --notes-file "$NOTES_FILE"
 
 echo "==> Publishing the update feed"
 feed=$(cat <<XML
@@ -54,10 +56,10 @@ feed=$(cat <<XML
 </rss>
 XML
 )
-print -r -- "$feed" > "$PROJECT_DIR/appcast.xml"
-print -r -- "$feed" > "$PROJECT_DIR/docs/appcast.xml"
-git -C "$PROJECT_DIR" add appcast.xml docs/appcast.xml
+print -r -- "$feed" > "$PROJECT_DIR/appcast-v2.xml"
+print -r -- "$feed" > "$PROJECT_DIR/docs/appcast-v2.xml"
+git -C "$PROJECT_DIR" add appcast-v2.xml docs/appcast-v2.xml
 git -C "$PROJECT_DIR" commit -q -m "Publish update feed for AIComposer $VERSION"
 git -C "$PROJECT_DIR" -c credential.helper='!gh auth git-credential' push -q "$REMOTE" HEAD:main
 echo "==> Done: https://github.com/$REPO/releases/tag/$TAG"
-echo "==> Feed: https://bennix.github.io/AIComposer/appcast.xml"
+echo "==> Feed: https://bennix.github.io/AIComposer/appcast-v2.xml"

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AIComposer — AI-native image editor for Mac</title>
-  <meta name="description" content="AIComposer is an AI-enhanced fork of Compositor. Generate and edit images on the Mac with ZenMux-backed models.">
+  <title>AIComposer — 从灵感到风格，再到图层</title>
+  <meta name="description" content="AIComposer for Mac: guided creation, 30 attributed style previews, and AI generation and editing inside a full layer editor. 从创作意图、风格探索到图层编辑。">
   <link rel="icon" href="./favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="./icon.png">
   <style>
@@ -39,7 +39,7 @@
       border-radius: 999px; padding: 6px 12px; cursor: pointer; font: inherit;
     }
     .lang[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
-    .hero { padding: 72px 0 36px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 48px; align-items: end; }
+    .hero { padding: 72px 0 36px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 48px; align-items: center; }
     .kicker { color: var(--accent); letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.78rem; font-family: ui-sans-serif, system-ui, sans-serif; }
     h1 { font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: 1.05; margin: 12px 0 18px; font-weight: 600; }
     .lead { color: var(--muted); font-size: 1.15rem; max-width: 38rem; }
@@ -82,6 +82,61 @@
       .hero, .grid { grid-template-columns: 1fr; }
       header { align-items: flex-start; }
     }
+
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+    .btn, .flow-tabs button { transition: background .18s ease, transform .18s ease; }
+    .btn:hover { transform: translateY(-2px); }
+    .guide-preview { background: #1b1914; border: 1px solid #4d4330; border-radius: 18px; box-shadow: 0 22px 70px #0005; overflow: hidden; }
+    .preview-top, .preview-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 15px 22px; font-size: .72rem; color: var(--muted); border-bottom: 1px solid var(--line); }
+    .release { color: var(--accent); border: 1px solid #5d4b2c; padding: 2px 8px; border-radius: 4px; }
+    .guide-preview h2 { padding: 0 22px; margin: 22px 0 4px; font-size: 1.65rem; }
+    .preview-hint { padding: 0 22px; margin: 0 0 18px; color: var(--muted); font-size: .85rem; }
+    .flow-tabs { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 22px; gap: 4px; }
+    .flow-tabs button { font: inherit; color: var(--muted); background: #24211b; border: 1px solid var(--line); border-radius: 5px; padding: 10px 2px; cursor: pointer; font-size: .78rem; }
+    .flow-tabs button[aria-pressed="true"] { color: var(--accent); background: #352b19; border-color: #8c6a32; }
+    .step-number { display: block; font-size: .7rem; letter-spacing: .12em; margin-bottom: 3px; }
+    .flow-content { min-height: 230px; margin: 20px 22px; padding: 18px; background: #14130f; border-left: 2px solid var(--accent); }
+    .field-label { color: var(--accent); font-size: .75rem; }
+    .flow-content p { font-size: 1.4rem; line-height: 1.45; margin: 18px 0; }
+    .flow-content .prompt-example { font-size: 1rem; }
+    .small { color: var(--muted); font-size: .78rem; }
+    .preview-bottom { border-top: 1px solid var(--line); border-bottom: 0; }
+    .creative-section { margin-top: 35px; border-top: 1px solid var(--line); }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .section-heading h2 { margin: 8px 0; }
+    .edition { color: #615442; font-size: 3rem; }
+    .workflow { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .workflow article { padding: 25px 20px; border-right: 1px solid var(--line); }
+    .workflow article:first-child { padding-left: 0; }
+    .workflow article:last-child { border-right: 0; }
+    .workflow article > span { font-size: .68rem; letter-spacing: .1em; color: var(--accent); }
+    .workflow h3 { font-size: 1.12rem; margin: 12px 0; }
+    .workflow p { color: var(--muted); font-size: .9rem; margin: 0; }
+    .atlas-note { display: grid; grid-template-columns: 1fr 2fr; gap: 36px; padding: 30px 0; }
+    .atlas-note strong { display: block; font-size: 3rem; font-weight: 400; color: var(--accent); line-height: 1.2; }
+    .atlas-note span { font-size: .85rem; color: var(--muted); }
+    .atlas-note p { margin: 0 0 12px; color: var(--muted); }
+    .atlas-note .text-link span { color: var(--accent); }
+    .connection { margin-top: 32px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 820px) {
+      .workflow { grid-template-columns: repeat(2, 1fr); }
+      .workflow article:first-child { padding-left: 20px; }
+      .workflow article:nth-child(2) { border-right: 0; }
+      .atlas-note { grid-template-columns: 1fr; gap: 18px; }
+      .hero { padding-top: 40px; gap: 28px; }
+      .edition { font-size: 2rem; }
+    }
+    @media (max-width: 440px) {
+      .brand span { max-width: 160px; font-size: .65rem; }
+      .brand img { width: 32px; height: 32px; }
+      .brand { gap: 8px; }
+      nav { gap: 5px; }
+      .lang { padding: 5px 8px; }
+      .workflow { grid-template-columns: 1fr; }
+      .workflow article { border-right: 0; border-bottom: 1px solid var(--line); }
+    }
+    @media (prefers-reduced-motion: reduce) { .btn, .flow-tabs button { transition: none; } }
   </style>
 </head>
 <body>
@@ -104,10 +159,10 @@
     <div class="hero">
       <div>
         <div class="kicker">macOS · ZenMux · Open Source</div>
-        <h1 data-lang="zh">在图层上生图、改图，而不是另开一个 AI 网站。</h1>
-        <h1 data-lang="en">Generate and edit images on the layer you already have.</h1>
-        <p class="lead" data-lang="zh">AIComposer 基于开源 Photoshop 风格编辑器 Compositor，加上 ZenMux 支持的 AI 生图与改图：选区填充、去物体、扩图、换天空，以及原有的图层、蒙版与修饰工具。</p>
-        <p class="lead" data-lang="en">AIComposer starts from the open-source Photoshop-style editor Compositor, then adds ZenMux-backed generation and editing: selection fill, object removal, expand, sky replacement, plus the original layers, masks, and retouching tools.</p>
+        <h1 data-lang="zh">让一个想法，<br>长出自己的风格。</h1>
+        <h1 data-lang="en">An idea.<br>A visual language.<br>Your next layer.</h1>
+        <p class="lead" data-lang="zh">从主体与用途出发，探索风格、细化画面语言，再把提示词带回原生 Mac 编辑器。AI 生图、重绘、选区编辑与图层后期，在同一条创作流里完成。</p>
+        <p class="lead" data-lang="en">Start with a subject. Find a style, shape the visual direction, and take your prompt into a native Mac editor. AI generation, restyling, selection editing, and layer finishing share one creative flow.</p>
         <div class="actions">
           <a class="btn primary" href="https://github.com/bennix/AIComposer/releases/latest">
             <span data-lang="zh">下载公证 DMG</span>
@@ -115,16 +170,40 @@
           </a>
           <a class="btn ghost" href="https://github.com/bennix/AIComposer">GitHub</a>
         </div>
-        <p class="meta" data-lang="zh">macOS 26.5 · Developer ID 签名并公证 · 当前版本 1.2.5</p>
-        <p class="meta" data-lang="en">macOS 26.5 · Developer ID signed and notarized · Current version 1.2.5</p>
+        <p class="meta" data-lang="zh">macOS 26.5 · Developer ID 签名并公证 · 当前版本 2.0.0</p>
+        <p class="meta" data-lang="en">macOS 26.5 · Developer ID signed and notarized · Current version 2.0.0</p>
       </div>
-      <aside class="card">
-        <h2 data-lang="zh">ZenMux 接入</h2>
-        <h2 data-lang="en">ZenMux inside the app</h2>
-        <p data-lang="zh">在设置里填入 ZenMux API Key（加密保存在本机）。生图可选 GPT Image、Qwen Image、Gemini Image；另可填写多模态模型（默认 google/gemini-3.8-flash）用于识别图形文字。没有 Key 时可用邀请链接注册。密钥不会进仓库。</p>
-        <p data-lang="en">Paste a ZenMux API key in Settings. It is encrypted on this Mac. Image models: GPT Image, Qwen Image, Gemini Image. A separate multimodal model name (default google/gemini-3.8-flash) is used to read graphic type. Invite links work when you do not have a key yet. Keys never enter the repository.</p>
+      <aside class="guide-preview" aria-label="Creative flow preview">
+        <div class="preview-top"><span>AIComposer / Creative guide</span><span class="release">2.0.0</span></div>
+        <h2 data-lang="zh">从哪一步开始？</h2><h2 data-lang="en">Find your next move.</h2>
+        <p class="preview-hint" data-lang="zh">点选步骤，预览创作流程</p><p class="preview-hint" data-lang="en">Choose a step to preview the flow</p>
+        <div class="flow-tabs" role="group" aria-label="Creative flow steps">
+          <button type="button" data-step="0" aria-pressed="true"><span class="step-number">01</span><span data-lang="zh">意图</span><span data-lang="en">Intent</span></button>
+          <button type="button" data-step="1" aria-pressed="false"><span class="step-number">02</span><span data-lang="zh">风格</span><span data-lang="en">Style</span></button>
+          <button type="button" data-step="2" aria-pressed="false"><span class="step-number">03</span><span data-lang="zh">语言</span><span data-lang="en">Direction</span></button>
+          <button type="button" data-step="3" aria-pressed="false"><span class="step-number">04</span><span data-lang="zh">确认</span><span data-lang="en">Review</span></button>
+        </div>
+        <div class="flow-content" aria-live="polite">
+          <div data-panel="0"><span class="field-label" data-lang="zh">主体与场景</span><span class="field-label" data-lang="en">Subject &amp; scene</span><p data-lang="zh">雨后的东京街角，<br>一位撑伞的旅人。</p><p data-lang="en">A traveler with an umbrella,<br>on a Tokyo street after rain.</p><span class="small" data-lang="zh">用途：旅行杂志封面</span><span class="small" data-lang="en">Purpose: travel magazine cover</span></div>
+          <div data-panel="1" hidden><span class="field-label" data-lang="zh">探索风格 / 绘画</span><span class="field-label" data-lang="en">Explore styles / Painting</span><p data-lang="zh">印象派</p><p data-lang="en">Impressionism</p><span class="small" data-lang="zh">可见的笔触 · 自然光 · 冷暖色彩</span><span class="small" data-lang="en">Visible brushwork · natural light · warm &amp; cool color</span></div>
+          <div data-panel="2" hidden><span class="field-label" data-lang="zh">让风格服务于画面</span><span class="field-label" data-lang="en">Make the style your own</span><p data-lang="zh">暖色窗光，冷色街道。<br>让伞的轮廓保持清晰。</p><p data-lang="en">Warm window light. Cool streets.<br>Keep the umbrella silhouette clear.</p><span class="small" data-lang="zh">补充构图、光线与需要避免的元素</span><span class="small" data-lang="en">Add composition, light, and elements to avoid</span></div>
+          <div data-panel="3" hidden><span class="field-label" data-lang="zh">可编辑的提示词</span><span class="field-label" data-lang="en">An editable prompt</span><p class="prompt-example">A traveler on a rainy Tokyo street, Impressionist painting, visible broken brushstrokes, warm window light, cool streets.</p><span class="small" data-lang="zh">确认后，选择模型与尺寸，再生成或应用</span><span class="small" data-lang="en">Review, choose a model and size, then generate or apply</span></div>
+        </div>
+        <div class="preview-bottom"><span data-lang="zh">原生创作引导 · 流程示例</span><span data-lang="en">Native creative guide · illustrative preview</span><span>01 → 04</span></div>
       </aside>
     </div>
+
+
+    <section id="creative-flow" class="creative-section">
+      <div class="section-heading"><div><div class="kicker">NEW / Guided creation</div><h2 data-lang="zh">先找到表达，再开始生成。</h2><h2 data-lang="en">Find the expression. Then generate.</h2></div><span class="edition">01—04</span></div>
+      <div class="workflow">
+        <article><span>01 / INTENT</span><h3 data-lang="zh">说清创作意图</h3><h3 data-lang="en">Set the intent</h3><p data-lang="zh">描述主体、场景和作品用途，让创作从具体的想法开始。</p><p data-lang="en">Describe the subject, scene, and purpose. Begin with a concrete idea.</p></article>
+        <article><span>02 / STYLE</span><h3 data-lang="zh">探索视觉风格</h3><h3 data-lang="en">Explore a style</h3><p data-lang="zh">按领域或关键词搜索，理解风格特征与模板；也可以自由创作。</p><p data-lang="en">Search by category or keyword. Explore traits and templates, or keep your style open.</p></article>
+        <article><span>03 / DIRECTION</span><h3 data-lang="zh">塑造画面语言</h3><h3 data-lang="en">Shape the direction</h3><p data-lang="zh">补充构图、光线、配色和要避免的元素，让模板贴合你的画面。</p><p data-lang="en">Add composition, light, color, and elements to avoid. Make the template fit your image.</p></article>
+        <article><span>04 / REVIEW</span><h3 data-lang="zh">确认并进入图层</h3><h3 data-lang="en">Review and create</h3><p data-lang="zh">编辑组合后的提示词，回到 AI 面板设置模型和尺寸，再继续图层后期。</p><p data-lang="en">Edit the assembled prompt, return to the AI panel, then continue finishing with layers.</p></article>
+      </div>
+      <div class="atlas-note"><div><strong>30 / 13</strong><span data-lang="zh">公开风格预览 / 创作领域</span><span data-lang="en">Public style previews / creative domains</span></div><div><p data-lang="zh">内置风格引用 <a href="https://vibeshot.club/lexicon">Vibe Shot Club 风格图谱</a>，每条保留原文链接。来源共 1,617 条，当前内置公开可访问的 30 条；支持导入授权 JSON 风格库。</p><p data-lang="en">Style previews are attributed to <a href="https://vibeshot.club/lexicon">Vibe Shot Club’s Style Atlas</a>, with original links. The source lists 1,617 entries; 30 publicly accessible previews are bundled. Import an authorized JSON catalog to expand your collection.</p><a class="text-link" href="https://github.com/bennix/AIComposer/blob/main/docs/style-atlas.md"><span data-lang="zh">使用说明与扩展来源 ↗</span><span data-lang="en">Guide &amp; expansion sources ↗</span></a></div></div>
+    </section>
 
     <section>
       <h2 data-lang="zh">AI 强化了什么</h2>
@@ -168,13 +247,20 @@
           <p data-lang="en">Brush, healing, clone, lasso, magic wand, distort, crop, plus Levels, Curves, and Hue/Saturation.</p>
         </article>
         <article class="tile">
-          <h3 data-lang="zh">五种界面语言</h3>
-          <h3 data-lang="en">Five UI languages</h3>
-          <p data-lang="zh">简体中文、英文、日文、繁体中文、韩文，菜单和 AI 提示词一并切换。</p>
-          <p data-lang="en">Simplified Chinese, English, Japanese, Traditional Chinese, and Korean, including AI prompts.</p>
+          <h3 data-lang="zh">熟悉的原生界面</h3>
+          <h3 data-lang="en">A familiar native editor</h3>
+          <p data-lang="zh">编辑器支持简体中文、英文、日文、繁体中文、韩文。新版创作引导采用中文界面，风格数据可按系统语言切换。</p>
+          <p data-lang="en">The editor supports Simplified Chinese, English, Japanese, Traditional Chinese, and Korean. The new creative guide uses a Chinese interface; style metadata follows the system language.</p>
         </article>
       </div>
     </section>
+
+      <section class="card connection">
+        <h2 data-lang="zh">ZenMux 接入</h2>
+        <h2 data-lang="en">ZenMux inside the app</h2>
+        <p data-lang="zh">在设置里填入 ZenMux API Key（加密保存在本机）。生图可选 GPT Image、Qwen Image、Gemini Image；另可填写多模态模型（默认 google/gemini-3.8-flash）用于识别图形文字。没有 Key 时可用邀请链接注册。密钥不会进仓库。</p>
+        <p data-lang="en">Paste a ZenMux API key in Settings. It is encrypted on this Mac. Image models: GPT Image, Qwen Image, Gemini Image. A separate multimodal model name (default google/gemini-3.8-flash) is used to read graphic type. Invite links work when you do not have a key yet. Keys never enter the repository.</p>
+      </section>
 
     <div class="origin">
       <p data-lang="zh"><strong>源自 Compositor。</strong> 本项目 fork 并修改自 <a href="https://github.com/robbietilton/Compositor">robbietilton/Compositor</a>（MIT）。原作者做了一台免费、开源、面向合成与后期的 Mac 图像编辑器。AIComposer 在此之上加入 ZenMux 生图/改图，并保持原项目的图层工作流。请同时尊重上游许可证与致谢。</p>
@@ -200,12 +286,21 @@
       root.lang = lang === "en" ? "en" : "zh-Hans";
       buttons.zh.setAttribute("aria-pressed", lang !== "en");
       buttons.en.setAttribute("aria-pressed", lang === "en");
-      localStorage.setItem("aic-lang", lang);
+      try { localStorage.setItem("aic-lang", lang); } catch {}
     }
     buttons.zh.addEventListener("click", () => setLang("zh"));
     buttons.en.addEventListener("click", () => setLang("en"));
-    const start = localStorage.getItem("aic-lang") || (navigator.language.startsWith("zh") ? "zh" : "en");
+    let stored;
+    try { stored = localStorage.getItem("aic-lang"); } catch {}
+    const start = stored || (navigator.language.startsWith("zh") ? "zh" : "en");
     setLang(start);
+    const stepButtons = document.querySelectorAll("[data-step]");
+    const panels = document.querySelectorAll("[data-panel]");
+    stepButtons.forEach(button => button.addEventListener("click", () => {
+      const selected = button.dataset.step;
+      stepButtons.forEach(item => item.setAttribute("aria-pressed", item.dataset.step === selected));
+      panels.forEach(panel => { panel.hidden = panel.dataset.panel !== selected; });
+    }));
   </script>
 </body>
 </html>

@@ -74,4 +74,12 @@ AIComposer is an AI-enhanced fork of [Compositor](https://github.com/robbietilto
 
 ## Releasing
 
-`scripts/release.sh` archives a Developer ID build, notarizes it, and writes `dist/Compositor-<version>.dmg`. Then `scripts/publish.sh` creates the GitHub Release on [bennix/AIComposer](https://github.com/bennix/AIComposer) and updates the Sparkle feed at `https://bennix.github.io/AIComposer/appcast.xml`. In-app updates use that feed, not the upstream Compositor appcast. Certificates and notary credentials stay out of this repository.
+`scripts/release.sh` archives a Developer ID build, notarizes it, and writes `dist/Compositor-<version>.dmg`. Then `scripts/publish.sh` creates the GitHub Release on [bennix/AIComposer](https://github.com/bennix/AIComposer) and updates the Sparkle feed at `https://bennix.github.io/AIComposer/appcast-v2.xml`. In-app updates use that feed, not the upstream Compositor appcast. Certificates and notary credentials stay out of this repository.
+
+## 引导式创作与风格图谱
+
+AI 生图与风格重绘等面板现支持四步创作引导，包含 Vibe Shot Club 公开的 30 条风格预览、分类搜索、来源引用和授权 JSON 导入。站点其余会员风格未导入。使用方式与互联网/X 扩展调研见 [风格图谱说明](docs/style-atlas.md)。
+
+### 2.0 更新通道
+
+2.0.0 使用新 Sparkle 更新签名与独立的 `appcast-v2.xml`。从 1.x 升级请手动下载安装公证 DMG；2.x 后续更新使用新通道。签名私钥在本机钥匙串的 `aicomposer` 账户下，发布时须使用同一密钥。

@@ -6,6 +6,7 @@ struct AIStudioSheet: View {
     let kind: AISheetKind
     var settings: AISettingsController = .shared
     @State private var prompt = ""
+    @State private var showsCreativeGuide = false
     @State private var model: AIImageModel
     @State private var size: AIImageSize = .square
     @State private var left = "256"
@@ -25,6 +26,10 @@ struct AIStudioSheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(kind.title).font(.title2.weight(.semibold))
                 Text(kind.help).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            if [.generate, .variation, .pattern, .poster, .restyle, .material].contains(kind) {
+                Button("引导式创作 · 探索风格图谱") { showsCreativeGuide = true }
+                    .accessibilityIdentifier("aiCreativeGuide")
             }
             if !settings.credentials.hasAPIKey {
                 VStack(alignment: .leading, spacing: 8) {
@@ -103,6 +108,9 @@ struct AIStudioSheet: View {
         .padding(24)
         .frame(minWidth: 540, idealWidth: 580)
         .disabled(session.isGeneratingAI)
+        .sheet(isPresented: $showsCreativeGuide) {
+            AICreativeGuide { prompt = $0 }
+        }
     }
 
     private var canRun: Bool {
