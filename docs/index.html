@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AIComposer — 从灵感到风格，再到图层</title>
-  <meta name="description" content="AIComposer for Mac: guided creation, 30 attributed style previews, and AI generation and editing inside a full layer editor. 从创作意图、风格探索到图层编辑。">
+  <meta name="description" content="AIComposer for Mac: guided image creation with up to five references, visual style recipes, multi-person direction, IK mannequin posing, and a full layer editor. 支持参考图、多人造型与 IK 人偶姿态的引导式创作。">
   <link rel="icon" href="./favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="./icon.png">
   <style>
@@ -146,8 +146,8 @@
         <img src="./icon.png" alt="AIComposer">
         <div>
           <strong>AIComposer</strong>
-          <span data-lang="zh">源自 Compositor 的 AI 图像编辑器</span>
-          <span data-lang="en">An AI-enhanced fork of Compositor</span>
+          <span data-lang="zh">AI 引导创作与图层图像编辑器</span>
+          <span data-lang="en">Guided AI creation and layer-based image editing</span>
         </div>
       </a>
       <nav>
@@ -159,23 +159,23 @@
     <div class="hero">
       <div>
         <div class="kicker">macOS · ZenMux · Open Source</div>
-        <h1 data-lang="zh">让一个想法，<br>长出自己的风格。</h1>
-        <h1 data-lang="en">An idea.<br>A visual language.<br>Your next layer.</h1>
-        <p class="lead" data-lang="zh">从主体与用途出发，探索风格、细化画面语言，再把提示词带回原生 Mac 编辑器。AI 生图、重绘、选区编辑与图层后期，在同一条创作流里完成。</p>
-        <p class="lead" data-lang="en">Start with a subject. Find a style, shape the visual direction, and take your prompt into a native Mac editor. AI generation, restyling, selection editing, and layer finishing share one creative flow.</p>
+        <h1 data-lang="zh">带上参考图，<br>把想法变成画面。</h1>
+        <h1 data-lang="en">Bring your references.<br>Shape the image you imagine.</h1>
+        <p class="lead" data-lang="zh">从创作意图和风格开始，也可以加入最多 5 张参考图。安排多人造型、换衣与场景，再用 IK 人偶调整姿态；提示词与参考图编号自动同步，生成后继续在原生 Mac 图层编辑器里完成作品。</p>
+        <p class="lead" data-lang="en">Start with an idea and a visual style, then add up to five reference images. Direct multiple people, clothing, and scenes, and pose figures with an IK mannequin. Reference numbers stay in sync with the prompt, and the result is ready for layer-based finishing in a native Mac editor.</p>
         <div class="actions">
-          <a class="btn primary" href="https://github.com/bennix/AIComposer/releases/latest">
+          <a class="btn primary" href="https://github.com/bennix/AIComposer/releases/download/v2.1.0/Compositor-2.1.0.dmg">
             <span data-lang="zh">下载公证 DMG</span>
             <span data-lang="en">Download notarized DMG</span>
           </a>
           <a class="btn ghost" href="https://github.com/bennix/AIComposer">GitHub</a>
         </div>
-        <p class="meta" data-lang="zh">macOS 26.5 · Developer ID 签名并公证 · 当前版本 2.1.0</p>
-        <p class="meta" data-lang="en">macOS 26.5 · Developer ID signed and notarized · Current version 2.1.0</p>
+        <p class="meta" data-lang="zh">macOS 26.5 · AIComposer 2.1.0 · Developer ID 签名并经 Apple 公证</p>
+        <p class="meta" data-lang="en">macOS 26.5 · AIComposer 2.1.0 · Developer ID signed and Apple notarized</p>
       </div>
       <aside class="guide-preview" aria-label="Creative flow preview">
         <div class="preview-top"><span>AIComposer / Creative guide</span><span class="release">2.1.0</span></div>
-        <h2 data-lang="zh">从哪一步开始？</h2><h2 data-lang="en">Find your next move.</h2>
+        <h2 data-lang="zh">让参考图参与创作</h2><h2 data-lang="en">Create with your references.</h2>
         <p class="preview-hint" data-lang="zh">点选步骤，预览创作流程</p><p class="preview-hint" data-lang="en">Choose a step to preview the flow</p>
         <div class="flow-tabs" role="group" aria-label="Creative flow steps">
           <button type="button" data-step="0" aria-pressed="true"><span class="step-number">01</span><span data-lang="zh">意图</span><span data-lang="en">Intent</span></button>
@@ -184,10 +184,10 @@
           <button type="button" data-step="3" aria-pressed="false"><span class="step-number">04</span><span data-lang="zh">确认</span><span data-lang="en">Review</span></button>
         </div>
         <div class="flow-content" aria-live="polite">
-          <div data-panel="0"><span class="field-label" data-lang="zh">主体与场景</span><span class="field-label" data-lang="en">Subject &amp; scene</span><p data-lang="zh">雨后的东京街角，<br>一位撑伞的旅人。</p><p data-lang="en">A traveler with an umbrella,<br>on a Tokyo street after rain.</p><span class="small" data-lang="zh">用途：旅行杂志封面</span><span class="small" data-lang="en">Purpose: travel magazine cover</span></div>
+          <div data-panel="0"><span class="field-label" data-lang="zh">主体、用途与参考图</span><span class="field-label" data-lang="en">Subject, purpose &amp; references</span><p data-lang="zh">雨后的东京街角，<br>一位撑伞的旅人。</p><p data-lang="en">A traveler with an umbrella,<br>on a Tokyo street after rain.</p><span class="small" data-lang="zh">可添加 1–5 张图片，删除后提示词编号自动重排</span><span class="small" data-lang="en">Add 1–5 images. Prompt references renumber when one is removed.</span></div>
           <div data-panel="1" hidden><span class="field-label" data-lang="zh">探索风格 / 绘画</span><span class="field-label" data-lang="en">Explore styles / Painting</span><p data-lang="zh">印象派</p><p data-lang="en">Impressionism</p><span class="small" data-lang="zh">可见的笔触 · 自然光 · 冷暖色彩</span><span class="small" data-lang="en">Visible brushwork · natural light · warm &amp; cool color</span></div>
           <div data-panel="2" hidden><span class="field-label" data-lang="zh">让风格服务于画面</span><span class="field-label" data-lang="en">Make the style your own</span><p data-lang="zh">暖色窗光，冷色街道。<br>让伞的轮廓保持清晰。</p><p data-lang="en">Warm window light. Cool streets.<br>Keep the umbrella silhouette clear.</p><span class="small" data-lang="zh">补充构图、光线与需要避免的元素</span><span class="small" data-lang="en">Add composition, light, and elements to avoid</span></div>
-          <div data-panel="3" hidden><span class="field-label" data-lang="zh">可编辑的提示词</span><span class="field-label" data-lang="en">An editable prompt</span><p class="prompt-example">A traveler on a rainy Tokyo street, Impressionist painting, visible broken brushstrokes, warm window light, cool streets.</p><span class="small" data-lang="zh">确认后，选择模型与尺寸，再生成或应用</span><span class="small" data-lang="en">Review, choose a model and size, then generate or apply</span></div>
+          <div data-panel="3" hidden><span class="field-label" data-lang="zh">提示词与参考图一起发送</span><span class="field-label" data-lang="en">Prompt and references, together</span><p class="prompt-example" data-lang="zh">基于参考图 1 的人物脸部特征；参考图 2 的服装；保持雨夜街景。</p><p class="prompt-example" data-lang="en">Use reference 1 for facial identity, reference 2 for clothing, and keep the rainy-night scene.</p><span class="small" data-lang="zh">确认后选择模型与尺寸，生成结果进入图层编辑</span><span class="small" data-lang="en">Choose a model and size; the result opens in the layer editor</span></div>
         </div>
         <div class="preview-bottom"><span data-lang="zh">原生创作引导 · 流程示例</span><span data-lang="en">Native creative guide · illustrative preview</span><span>01 → 04</span></div>
       </aside>
@@ -203,6 +203,34 @@
         <article><span>04 / REVIEW</span><h3 data-lang="zh">确认并进入图层</h3><h3 data-lang="en">Review and create</h3><p data-lang="zh">编辑组合后的提示词，回到 AI 面板设置模型和尺寸，再继续图层后期。</p><p data-lang="en">Edit the assembled prompt, return to the AI panel, then continue finishing with layers.</p></article>
       </div>
       <div class="atlas-note"><div><strong>30 / 13</strong><span data-lang="zh">公开风格预览 / 创作领域</span><span data-lang="en">Public style previews / creative domains</span></div><div><p data-lang="zh">内置风格引用 <a href="https://vibeshot.club/lexicon">Vibe Shot Club 风格图谱</a>，每条保留原文链接。来源共 1,617 条，当前内置公开可访问的 30 条；支持导入授权 JSON 风格库。</p><p data-lang="en">Style previews are attributed to <a href="https://vibeshot.club/lexicon">Vibe Shot Club’s Style Atlas</a>, with original links. The source lists 1,617 entries; 30 publicly accessible previews are bundled. Import an authorized JSON catalog to expand your collection.</p><a class="text-link" href="https://github.com/bennix/AIComposer/blob/main/docs/style-atlas.md"><span data-lang="zh">使用说明与扩展来源 ↗</span><span data-lang="en">Guide &amp; expansion sources ↗</span></a></div></div>
+    </section>
+
+    <section class="creative-section" id="references-and-posing">
+      <div class="section-heading"><div><div class="kicker">NEW / References &amp; posing</div><h2 data-lang="zh">从图像参考，到人物姿态。</h2><h2 data-lang="en">From image references to character poses.</h2></div><span class="edition">05—06</span></div>
+      <div class="grid">
+        <article class="tile">
+          <h3 data-lang="zh">最多 5 张参考图</h3><h3 data-lang="en">Up to five references</h3>
+          <p data-lang="zh">拖入、粘贴或选择图片，以缩略图管理。每张图可作为灵感、人物脸、服装、姿态或场景参考；删除后提示词自动更新“参考图 1、2、3…”，并按当前顺序发送。</p>
+          <p data-lang="en">Drop, paste, or choose images and manage them as thumbnails. Assign each as inspiration, identity, clothing, pose, or scene. Removing an image updates the numbered prompt references and sends the remaining images in order.</p>
+        </article>
+        <article class="tile">
+          <h3 data-lang="zh">多人造型与身份保持</h3><h3 data-lang="en">Multiple people, distinct identities</h3>
+          <p data-lang="zh">为 1–5 位人物分别指定脸部、服装与姿态参考，也可叠加换衣和换场景。换脸时提示模型严格保留参考脸的生物特征，不混合不同人物身份。</p>
+          <p data-lang="en">Direct one to five people with separate face, clothing, and pose references. Combine outfit and scene changes. Face edits instruct the model to preserve the reference identity’s defining facial features without blending people together.</p>
+        </article>
+        <article class="tile">
+          <h3 data-lang="zh">IK 人偶姿态编辑</h3><h3 data-lang="en">IK mannequin posing</h3>
+          <p data-lang="zh">用可操控的人偶摆姿势，支持反向运动学（IK）、关节限位、多人独立控制、镜像与自动落地。导出的姿态图作为单独的姿态引导附件，不会和普通参考图编号混淆。</p>
+          <p data-lang="en">Pose an interactive mannequin with inverse kinematics (IK), joint limits, per-person controls, mirroring, and automatic grounding. The exported pose guide is sent as a separate attachment, distinct from numbered image references.</p>
+        </article>
+      </div>
+      <div class="atlas-note">
+        <div><strong>5,424 / 24</strong><span data-lang="zh">公开图库索引 / 归纳画面配方</span><span data-lang="en">Public gallery index / visual recipes</span></div>
+        <div>
+          <p data-lang="zh">从 OpenNana 可公开访问的案例样图归纳画面构成、色彩、光线、材质与构图，再融合进创作引导。付费案例不复制原始提示词；根据可见图像提炼视觉特征，让参考灵感服务于你的主题。</p>
+          <p data-lang="en">Visual traits such as composition, color, lighting, and material are distilled from publicly viewable OpenNana sample images and folded into the creative guide. Paid prompt text is not copied; visible images inform visual direction for your own subject.</p>
+        </div>
+      </div>
     </section>
 
     <section>
