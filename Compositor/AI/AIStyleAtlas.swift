@@ -67,6 +67,23 @@ nonisolated struct AICreativeBrief {
     var purpose = ""
     var direction = ""
     var style: AIStyle?
+    var facets: [AIPromptFacet] = []
+
+    mutating func toggleFacet(_ facet: AIPromptFacet) {
+        if facets.contains(where: { $0.id == facet.id }) {
+            facets.removeAll { $0.id == facet.id }
+        } else {
+            facets.removeAll { $0.dimension == facet.dimension }
+            facets.append(facet)
+        }
+    }
+
+    mutating func useFacets(_ choices: [AIPromptFacet]) {
+        for facet in choices {
+            facets.removeAll { $0.dimension == facet.dimension }
+            facets.append(facet)
+        }
+    }
 
     var prompt: String {
         let subject = subject.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -76,7 +93,7 @@ nonisolated struct AICreativeBrief {
                 ? $0.prompt.replacingOccurrences(of: "[subject]", with: subject)
                 : "\(subject). \($0.prompt)"
         } ?? subject
-        return ([base] + [purpose, direction].filter {
+        return ([base] + facets.map(\.instruction) + [purpose, direction].filter {
             !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }).joined(separator: "\n")
     }

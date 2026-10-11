@@ -61,6 +61,8 @@ extension EditorSession {
     func runAI(
         kind: AISheetKind,
         prompt: String,
+        referencePNGs: [Data] = [],
+        poseGuidePNG: Data? = nil,
         model: AIImageModel,
         size: AIImageSize,
         expand: (left: Int, right: Int, top: Int, bottom: Int) = (0, 0, 0, 0),
@@ -102,7 +104,7 @@ extension EditorSession {
             switch kind.input {
             case .none:
                 let image = try await client.generate(AIImageRequest(
-                    credentials: credentials, model: model, prompt: combined, size: size))
+                    credentials: credentials, model: model, prompt: combined, size: size, referencePNGs: referencePNGs, poseGuidePNG: poseGuidePNG))
                 let asset = try AIImagePipeline.asset(from: image.data, name: kind.layerName)
                 aiSheet = nil
                 insertGenerated(asset)
@@ -110,7 +112,7 @@ extension EditorSession {
                 try await runAIExpand(prompt: combined, model: model, size: size, expand: expand,
                                       credentials: credentials, client: client)
             case .canvas, .selection, .canvasOrSelection:
-                try await runAIEdit(kind: kind, prompt: combined, model: model, size: size,
+                try await runAIEdit(kind: kind, prompt: combined, referencePNGs: referencePNGs, poseGuidePNG: poseGuidePNG, model: model, size: size,
                                     credentials: credentials, client: client)
             }
         } catch {
@@ -151,6 +153,8 @@ extension EditorSession {
     private func runAIEdit(
         kind: AISheetKind,
         prompt: String,
+        referencePNGs: [Data],
+        poseGuidePNG: Data?,
         model: AIImageModel,
         size: AIImageSize,
         credentials: AICredentials,
@@ -174,6 +178,8 @@ extension EditorSession {
             model: model,
             prompt: prompt,
             size: kind.showsSizePicker ? size : matched,
+            referencePNGs: referencePNGs,
+            poseGuidePNG: poseGuidePNG,
             imagePNG: AIImagePipeline.pngData(from: sendImage),
             maskPNG: maskPNG,
             coveragePNG: coveragePNG,

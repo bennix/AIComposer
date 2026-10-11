@@ -1,0 +1,6 @@
+<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IK 人偶姿态编辑</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:13px system-ui;background:#f5f4ef;color:#272723}header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px;border-bottom:1px solid #ddd}button,select{font:inherit;padding:6px;border-radius:5px;border:1px solid #ccc;background:white}button.active{background:#dbebff}#stage{width:100%;height:calc(100vh - 106px);display:block;touch-action:none}footer{padding:8px}#error{color:#b00020}
+</style>
+<header><select id="person" aria-label="人物"></select><select id="preset" aria-label="姿态预设"><option value="">22 种姿态预设</option></select><select id="joint" aria-label="关节"></select><button id="move" class="active">拖动 · IK</button><button id="rotate">旋转关节</button><button id="mirror">镜像姿态</button><button id="reset">复位</button><label><input id="limits" type="checkbox" checked>关节限位</label><label><input id="ground" type="checkbox" checked>自动落地</label><button id="front">正面</button><button id="side">侧面</button><button id="fit">适合画面</button></header>
+<canvas id="stage"></canvas><footer>点击关节或选择关节后拖动箭头：手脚带动关节链，骨盆移动整个人偶。拖动空白区域调整镜头，滚轮缩放。<span id="error"></span></footer><script src="editor.js"></script></html>

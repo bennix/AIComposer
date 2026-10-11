@@ -11,6 +11,8 @@ nonisolated struct AIImageRequest: Sendable {
     var prompt: String
     var size: AIImageSize
     var quality: String = "auto"
+    var referencePNGs: [Data] = []
+    var poseGuidePNG: Data? = nil
     var imagePNG: Data? = nil
     /// OpenAI Images alpha mask (transparent = edit).
     var maskPNG: Data? = nil
@@ -59,10 +61,11 @@ nonisolated struct AIImageClient: Sendable {
     }
 
     func generate(_ request: AIImageRequest) async throws -> AIGeneratedImage {
+        guard request.referencePNGs.count <= 5 else { throw AIImageError.transport("参考图最多 5 张。") }
         if request.model.usesVertex {
             return try await generateVertex(request)
         }
-        if request.imagePNG != nil {
+        if request.imagePNG != nil || !request.referencePNGs.isEmpty || request.poseGuidePNG != nil {
             return try await editOpenAI(request)
         }
         return try await generateOpenAI(request)
@@ -90,10 +93,11 @@ nonisolated struct AIImageClient: Sendable {
 
     func editOpenAI(_ request: AIImageRequest) async throws -> AIGeneratedImage {
         let credentials = request.credentials.trimmed
-        guard let base = credentials.endpoint, let image = request.imagePNG else {
+        guard let base = credentials.endpoint else {
             throw AICredentialError.invalidURL
         }
         var prompt = request.prompt
+        if !Self.attachmentInstruction(request).isEmpty { prompt += "\n" + Self.attachmentInstruction(request) }
         if let hint = request.selectionHint, !hint.isEmpty, !prompt.contains(hint) {
             prompt += " " + hint
         }
@@ -102,7 +106,11 @@ nonisolated struct AIImageClient: Sendable {
         form.add("prompt", prompt)
         form.add("n", "1")
         form.add("size", request.size.rawValue)
-        form.addFile("image", filename: "image.png", mime: "image/png", data: image)
+        let images = (request.imagePNG.map { [$0] } ?? []) + request.referencePNGs + (request.poseGuidePNG.map { [$0] } ?? [])
+        guard !images.isEmpty, request.referencePNGs.count <= 5 else { throw AIImageError.transport("参考图最多 5 张，且图像请求不能为空。") }
+        for (index, image) in images.enumerated() {
+            form.addFile(images.count == 1 ? "image" : "image[]", filename: "image-\(index).png", mime: "image/png", data: image)
+        }
         if let mask = request.maskPNG {
             form.addFile("mask", filename: "mask.png", mime: "image/png", data: mask)
         }
@@ -162,12 +170,34 @@ nonisolated struct AIImageClient: Sendable {
         return try AIRecognizedText.parse(AIRecognizedText.parseChatContent(data))
     }
 
+    static func attachmentInstruction(_ request: AIImageRequest) -> String {
+        guard !request.referencePNGs.isEmpty || request.poseGuidePNG != nil else { return "" }
+        var lines: [String] = []
+        let offset = request.imagePNG == nil ? 0 : 1
+        if offset == 1 { lines.append("附图 1 是待编辑的画布背景，不是身份脸图或用户参考图 1。") }
+        for index in request.referencePNGs.indices {
+            lines.append("附图 \(offset + index + 1) = 用户参考图 \(index + 1)。")
+        }
+        if request.poseGuidePNG != nil {
+            lines.append("附图 \(offset + request.referencePNGs.count + 1) = IK 人偶姿态引导图，仅用于编号人物的身体姿态和空间关系，不是身份、服装或场景来源。")
+        }
+        return lines.joined(separator: "\n")
+    }
+
     /// Background photograph, same-size selection mask, and the edit prompt in one request.
     static func vertexParts(_ request: AIImageRequest) -> [[String: Any]] {
         var parts: [[String: Any]] = []
         if let image = request.imagePNG {
             parts.append(["text": L10n.t("ai.prompt.backgroundPhoto")])
             parts.append(["inlineData": ["mimeType": "image/png", "data": image.base64EncodedString()]])
+        }
+        for (index, image) in request.referencePNGs.enumerated() {
+            parts.append(["text": "参考图 \(index + 1) / Reference image \(index + 1). Use as visual reference; follow the user's creation instructions."])
+            parts.append(["inlineData": ["mimeType": "image/png", "data": image.base64EncodedString()]])
+        }
+        if let pose = request.poseGuidePNG {
+            parts.append(["text": "IK 人偶姿态引导图：图中编号对应人物编号。仅控制姿态与位置，不复制人偶的脸、材质、颜色或数字。"])
+            parts.append(["inlineData": ["mimeType": "image/png", "data": pose.base64EncodedString()]])
         }
         if let coverage = request.coveragePNG {
             parts.append(["text": L10n.t("ai.prompt.selectionMask")])

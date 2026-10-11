@@ -6,6 +6,8 @@ struct AIStudioSheet: View {
     let kind: AISheetKind
     var settings: AISettingsController = .shared
     @State private var prompt = ""
+    @State private var referenceImages: [AIReferenceImage] = []
+    @State private var characterPlan = AICharacterPlan()
     @State private var showsCreativeGuide = false
     @State private var model: AIImageModel
     @State private var size: AIImageSize = .square
@@ -28,7 +30,7 @@ struct AIStudioSheet: View {
                 Text(kind.help).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             if [.generate, .variation, .pattern, .poster, .restyle, .material].contains(kind) {
-                Button("引导式创作 · 探索风格图谱") { showsCreativeGuide = true }
+                Button("引导式创作 · 风格与图库灵感") { showsCreativeGuide = true }
                     .accessibilityIdentifier("aiCreativeGuide")
             }
             if !settings.credentials.hasAPIKey {
@@ -75,13 +77,19 @@ struct AIStudioSheet: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(kind.requiresPrompt || kind.input == .none ? "Prompt" : "Extra instruction")
                     .font(.callout.weight(.medium))
-                TextEditor(text: $prompt)
+                TextEditor(text: referencePromptBinding)
                     .font(.body)
                     .frame(minHeight: kind.requiresPrompt ? 110 : 72, maxHeight: 180)
                     .padding(6)
                     .background(.quaternary.opacity(0.45), in: RoundedRectangle(cornerRadius: 7))
                     .accessibilityIdentifier("aiPrompt")
                 Text(kind.placeholder).font(.callout).foregroundStyle(.tertiary)
+            }
+            if !referenceImages.isEmpty {
+                AIReferenceImagesView(images: $referenceImages, people: characterPlan.enabled ? characterPlan.people : [])
+            }
+            if let error = characterPlan.validation(references: referenceImages.map(\.characterReference)) {
+                Text(error).font(.caption).foregroundStyle(.orange)
             }
             HStack {
                 Button("Cancel") { session.aiSheet = nil }
@@ -91,7 +99,9 @@ struct AIStudioSheet: View {
                     Task {
                         await session.runAI(
                             kind: kind,
-                            prompt: prompt,
+                            prompt: AIReferenceImage.prompt(prompt, images: referenceImages, plan: characterPlan),
+                            referencePNGs: referenceImages.map(\.png),
+                            poseGuidePNG: characterPlan.enabled && characterPlan.usePose ? characterPlan.poseGuidePNG : nil,
                             model: model,
                             size: size,
                             expand: (Int(left) ?? 0, Int(right) ?? 0, Int(top) ?? 0, Int(bottom) ?? 0),
@@ -109,12 +119,18 @@ struct AIStudioSheet: View {
         .frame(minWidth: 540, idealWidth: 580)
         .disabled(session.isGeneratingAI)
         .sheet(isPresented: $showsCreativeGuide) {
-            AICreativeGuide { prompt = $0 }
+            AICreativeGuide(referenceImages: $referenceImages, characterPlan: $characterPlan) { prompt = $0 }
         }
     }
 
+    private var referencePromptBinding: Binding<String> {
+        Binding(get: { AIReferenceImage.prompt(prompt, images: referenceImages, plan: characterPlan) },
+                set: { prompt = AIReferenceImage.editableBase($0, images: referenceImages, plan: characterPlan) })
+    }
+
     private var canRun: Bool {
-        guard !session.isGeneratingAI, settings.credentials.hasAPIKey else { return false }
+        guard !session.isGeneratingAI, settings.credentials.hasAPIKey,
+              characterPlan.validation(references: referenceImages.map(\.characterReference)) == nil else { return false }
         if kind.requiresPrompt { return !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         if kind == .expand {
             return [left, right, top, bottom].contains { (Int($0) ?? 0) > 0 }
