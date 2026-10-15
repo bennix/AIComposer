@@ -77,6 +77,14 @@ AIComposer is an AI-enhanced fork of [Compositor](https://github.com/robbietilto
 - Gateway: [ZenMux](https://zenmux.ai)
 - Original code authored by bennix is licensed under [GPL-3.0-only](LICENSE); see [LICENSING.md](LICENSING.md). Upstream Compositor code retains its MIT license and copyright notice in [LICENSES/previous-root-LICENSE.txt](LICENSES/previous-root-LICENSE.txt).
 
+### Dual Licensing
+
+- **Open Source**: Original code authored by Xu Zhiping (bennix) is licensed under **GNU General Public License v3.0 only (GPL-3.0-only)** for personal, academic, open-source, and commercial usage, subject to the applicable GPL terms. See [LICENSE](LICENSE) and [LICENSING.md](LICENSING.md).
+- **Commercial License**: For enterprise deployment, SaaS embedding, or proprietary integration where you seek permission beyond the GPL terms for code Xu Zhiping has the right to license, please contact [macdevsh@gmail.com](mailto:macdevsh@gmail.com) to discuss a separate commercial license agreement.
+
+The GPL permits commercial use; enterprise or SaaS use alone does not require a commercial license. A separate commercial agreement applies only when agreed in writing and only to rights the licensor controls. Upstream and third-party code, dependencies, assets, and separately licensed directories retain their own terms; this offer does not grant proprietary rights to them or waive their requirements.
+
+
 ## Releasing
 
 `scripts/release.sh` archives a Developer ID build, notarizes it, and writes `dist/Compositor-<version>.dmg`. Then `scripts/publish.sh` creates the GitHub Release on [bennix/AIComposer](https://github.com/bennix/AIComposer) and updates the Sparkle feed at `https://bennix.github.io/AIComposer/appcast-v2.xml`. In-app updates use that feed, not the upstream Compositor appcast. Certificates and notary credentials stay out of this repository.
