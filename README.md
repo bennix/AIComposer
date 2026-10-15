@@ -1,5 +1,10 @@
 # AIComposer
 
+> **License / 许可:** Original code authored by bennix: **GPL-3.0-only**.
+> Upstream and third-party material retain their original terms and notices.
+> See [LICENSE](LICENSE) and [LICENSING.md](LICENSING.md) for the current licensing scope.
+
+
 [English](#aicomposer-english) · [中文](#aicomposer-中文)
 
 macOS image editor with **AI generate / edit**, forked from [robbietilton/Compositor](https://github.com/robbietilton/Compositor) and extended with [ZenMux](https://zenmux.ai).
@@ -38,7 +43,7 @@ AIComposer 源自开源项目 [Compositor](https://github.com/robbietilton/Compo
 
 - 上游：[robbietilton/Compositor](https://github.com/robbietilton/Compositor)
 - 模型网关：[ZenMux](https://zenmux.ai)
-- 许可证：MIT，见 [LICENSE](LICENSE)。请保留上游版权声明。
+- 本仓库 bennix 原创代码采用 [GPL-3.0-only](LICENSE)，详见 [许可说明](LICENSING.md)。上游 Compositor 代码仍遵循 MIT，原始许可和版权声明保存在 [LICENSES/previous-root-LICENSE.txt](LICENSES/previous-root-LICENSE.txt)。
 
 ---
 
@@ -70,7 +75,7 @@ AIComposer is an AI-enhanced fork of [Compositor](https://github.com/robbietilto
 
 - Upstream: [robbietilton/Compositor](https://github.com/robbietilton/Compositor)
 - Gateway: [ZenMux](https://zenmux.ai)
-- License: MIT, see [LICENSE](LICENSE). Keep the upstream copyright notice.
+- Original code authored by bennix is licensed under [GPL-3.0-only](LICENSE); see [LICENSING.md](LICENSING.md). Upstream Compositor code retains its MIT license and copyright notice in [LICENSES/previous-root-LICENSE.txt](LICENSES/previous-root-LICENSE.txt).
 
 ## Releasing
 
