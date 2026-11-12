@@ -100,3 +100,11 @@ AI 生图与风格重绘等面板现支持四步创作引导，包含 Vibe Shot 
 ### Open Image Prompts 双 Skill 创作流
 
 引导式创作现整合 `img-gen-taste` 的 39 张风格卡与 `img-gen-prompts` 的全量 23,196 条原始文本、38,519 张图片索引。支持原生本地检索、真实参考预览、原文/译文分离、作者来源、全部图片内置离线浏览，以及基于所选参考整理中英文新提示词。详见 [完整使用与数据说明](docs/open-image-prompts.md)。
+
+## 2.2.0 完整离线版 / Complete Offline Edition
+
+39 张风格卡、23,196 条原始文本，以及 43,943 张内置图片（OIP 38,519 + OpenNana 5,424）。检索和浏览无需联网；AI 整理及生图仍连接设置中的模型服务。
+
+完整公证 DMG 约 7.36GB，因 GitHub 单个发布文件小于 2GiB 的限制，使用四个分段发布。[安装与校验说明](docs/install-offline-edition.md) · [2.2.0 更新说明](docs/release-notes-2.2.0.md)。合并后与本地公证原件逐字节一致，Sparkle 会提示手动下载。
+
+The complete notarized DMG is distributed as four verified parts. Use the download helper in the release to reconstruct it. Search and resource browsing are offline; AI operations require a model connection.

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AIComposer — 从灵感到风格，再到图层</title>
-  <meta name="description" content="AIComposer for Mac: guided image creation with up to five references, visual style recipes, multi-person direction, IK mannequin posing, and a full layer editor. 支持参考图、多人造型与 IK 人偶姿态的引导式创作。">
+  <title>AIComposer — 真实参考，离线灵感，原生创作</title>
+  <meta name="description" content="AIComposer 2.2.0 for Mac. 39 style cards, 23,196 original prompts and 43,943 bundled reference images. Offline search and browsing, guided creation, IK posing and native layer editing.">
   <link rel="icon" href="./favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="./icon.png">
   <style>
@@ -137,6 +137,24 @@
       .workflow article { border-right: 0; border-bottom: 1px solid var(--line); }
     }
     @media (prefers-reduced-motion: reduce) { .btn, .flow-tabs button { transition: none; } }
+
+    .library-feature { border-top: 1px solid var(--line); margin-top: 28px; }
+    .library-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--line); margin: 20px 0 28px; }
+    .library-stats > div { padding: 24px 12px; border-right: 1px solid var(--line); }
+    .library-stats > div:first-child { padding-left: 0; }
+    .library-stats > div:last-child { border-right: 0; }
+    .library-stats strong { display: block; color: var(--accent); font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 400; line-height: 1.2; }
+    .library-stats span, .library-caption { color: var(--muted); font-size: .9rem; }
+    .skill-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .skill-pair h3 { font-size: 1.4rem; margin: 12px 0; }
+    .skill-pair p { color: var(--muted); }
+    .library-caption { margin: 24px 0 12px; }
+    .download-section { border: 1px solid #5d4b2c; background: #1b1811; border-radius: 18px; padding: 30px; margin-top: 36px; scroll-margin-top: 20px; }
+    .download-section h2 { margin-top: 12px; }
+    .download-section p { color: var(--muted); }
+    .download-command { padding: 18px; overflow-x: auto; background: #11100d; border: 1px solid var(--line); border-radius: 8px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
+    #copy-status { margin-left: 12px; }
+    @media (max-width: 620px) { .skill-pair { grid-template-columns: 1fr; gap: 14px; } .library-stats > div { padding: 20px 7px; } .library-stats span { font-size: .72rem; } .download-section { padding: 22px; } }
   </style>
 </head>
 <body>
@@ -158,24 +176,24 @@
 
     <div class="hero">
       <div>
-        <div class="kicker">macOS · ZenMux · Open Source</div>
-        <h1 data-lang="zh">带上参考图，<br>把想法变成画面。</h1>
-        <h1 data-lang="en">Bring your references.<br>Shape the image you imagine.</h1>
-        <p class="lead" data-lang="zh">从创作意图和风格开始，也可以加入最多 5 张参考图。安排多人造型、换衣与场景，再用 IK 人偶调整姿态；提示词与参考图编号自动同步，生成后继续在原生 Mac 图层编辑器里完成作品。</p>
-        <p class="lead" data-lang="en">Start with an idea and a visual style, then add up to five reference images. Direct multiple people, clothing, and scenes, and pose figures with an IK mannequin. Reference numbers stay in sync with the prompt, and the result is ready for layer-based finishing in a native Mac editor.</p>
+        <div class="kicker">macOS · Offline Library · AI Studio</div>
+        <h1 data-lang="zh">真实参考，<br>离线灵感，<br>你的下一张作品。</h1>
+        <h1 data-lang="en">Real references.<br>Offline inspiration.<br>Your next layer.</h1>
+        <p class="lead" data-lang="zh">39 张风格卡、23,196 条原始提示词与 43,943 张参考图，全部随应用内置。从视觉方向到真实案例，再到提示词与图层编辑，让每一步创作都有据可循。检索与看图无需联网，AI 整理和生图连接你设置的模型服务。</p>
+        <p class="lead" data-lang="en">39 style cards, 23,196 original prompts and 43,943 reference images, all bundled with the app. Choose a visual direction, inspect real examples, and bring your prompt into a native layer editor. Search and browse offline; AI adaptation and generation connect to your configured model service.</p>
         <div class="actions">
-          <a class="btn primary" href="https://github.com/bennix/AIComposer/releases/download/v2.1.0/Compositor-2.1.0.dmg">
-            <span data-lang="zh">下载公证 DMG</span>
-            <span data-lang="en">Download notarized DMG</span>
+          <a class="btn primary" href="#download">
+            <span data-lang="zh">下载完整离线版</span>
+            <span data-lang="en">Get the offline edition</span>
           </a>
           <a class="btn ghost" href="https://github.com/bennix/AIComposer">GitHub</a>
         </div>
-        <p class="meta" data-lang="zh">macOS 26.5 · AIComposer 2.1.0 · Developer ID 签名并经 Apple 公证</p>
-        <p class="meta" data-lang="en">macOS 26.5 · AIComposer 2.1.0 · Developer ID signed and Apple notarized</p>
+        <p class="meta" data-lang="zh">macOS 26.5 · AIComposer 2.2.0 · Developer ID 签名并经 Apple 公证</p>
+        <p class="meta" data-lang="en">macOS 26.5 · AIComposer 2.2.0 · Developer ID signed and Apple notarized</p>
       </div>
       <aside class="guide-preview" aria-label="Creative flow preview">
-        <div class="preview-top"><span>AIComposer / Creative guide</span><span class="release">2.1.0</span></div>
-        <h2 data-lang="zh">让参考图参与创作</h2><h2 data-lang="en">Create with your references.</h2>
+        <div class="preview-top"><span>AIComposer / Creative guide</span><span class="release">2.2.0</span></div>
+        <h2 data-lang="zh">把资料库变成创作流</h2><h2 data-lang="en">Turn references into direction.</h2>
         <p class="preview-hint" data-lang="zh">点选步骤，预览创作流程</p><p class="preview-hint" data-lang="en">Choose a step to preview the flow</p>
         <div class="flow-tabs" role="group" aria-label="Creative flow steps">
           <button type="button" data-step="0" aria-pressed="true"><span class="step-number">01</span><span data-lang="zh">意图</span><span data-lang="en">Intent</span></button>
@@ -184,15 +202,31 @@
           <button type="button" data-step="3" aria-pressed="false"><span class="step-number">04</span><span data-lang="zh">确认</span><span data-lang="en">Review</span></button>
         </div>
         <div class="flow-content" aria-live="polite">
-          <div data-panel="0"><span class="field-label" data-lang="zh">主体、用途与参考图</span><span class="field-label" data-lang="en">Subject, purpose &amp; references</span><p data-lang="zh">雨后的东京街角，<br>一位撑伞的旅人。</p><p data-lang="en">A traveler with an umbrella,<br>on a Tokyo street after rain.</p><span class="small" data-lang="zh">可添加 1–5 张图片，删除后提示词编号自动重排</span><span class="small" data-lang="en">Add 1–5 images. Prompt references renumber when one is removed.</span></div>
-          <div data-panel="1" hidden><span class="field-label" data-lang="zh">探索风格 / 绘画</span><span class="field-label" data-lang="en">Explore styles / Painting</span><p data-lang="zh">印象派</p><p data-lang="en">Impressionism</p><span class="small" data-lang="zh">可见的笔触 · 自然光 · 冷暖色彩</span><span class="small" data-lang="en">Visible brushwork · natural light · warm &amp; cool color</span></div>
-          <div data-panel="2" hidden><span class="field-label" data-lang="zh">让风格服务于画面</span><span class="field-label" data-lang="en">Make the style your own</span><p data-lang="zh">暖色窗光，冷色街道。<br>让伞的轮廓保持清晰。</p><p data-lang="en">Warm window light. Cool streets.<br>Keep the umbrella silhouette clear.</p><span class="small" data-lang="zh">补充构图、光线与需要避免的元素</span><span class="small" data-lang="en">Add composition, light, and elements to avoid</span></div>
-          <div data-panel="3" hidden><span class="field-label" data-lang="zh">提示词与参考图一起发送</span><span class="field-label" data-lang="en">Prompt and references, together</span><p class="prompt-example" data-lang="zh">基于参考图 1 的人物脸部特征；参考图 2 的服装；保持雨夜街景。</p><p class="prompt-example" data-lang="en">Use reference 1 for facial identity, reference 2 for clothing, and keep the rainy-night scene.</p><span class="small" data-lang="zh">确认后选择模型与尺寸，生成结果进入图层编辑</span><span class="small" data-lang="en">Choose a model and size; the result opens in the layer editor</span></div>
+          <div data-panel="0"><span class="field-label" data-lang="zh">主体、用途与参考图</span><span class="field-label" data-lang="en">Subject, purpose &amp; references</span><p data-lang="zh">手作陶瓷杯，<br>米白背景上的产品视觉。</p><p data-lang="en">A handmade ceramic cup,<br>on a quiet ivory background.</p><span class="small" data-lang="zh">先描述主体与用途；用户约束始终优先于风格默认值</span><span class="small" data-lang="en">Start with subject and purpose; your constraints override style defaults.</span></div>
+          <div data-panel="1" hidden><span class="field-label" data-lang="zh">Taste / 39 张视觉方向卡</span><span class="field-label" data-lang="en">Taste / 39 art-direction cards</span><p data-lang="zh">白色画廊高键产品</p><p data-lang="en">White Gallery High-Key</p><span class="small" data-lang="zh">高键柔光 · 留白 · 清晰材质</span><span class="small" data-lang="en">Soft high-key light · negative space · material clarity</span></div>
+          <div data-panel="2" hidden><span class="field-label" data-lang="zh">让风格服务于画面</span><span class="field-label" data-lang="en">Make the style your own</span><p data-lang="zh">大面积柔光，克制留白。<br>保留杯口与釉面的细节。</p><p data-lang="en">Soft light. Quiet negative space.<br>Keep the rim and glaze details clear.</p><span class="small" data-lang="zh">补充构图、光线与需要避免的元素</span><span class="small" data-lang="en">Add composition, light, and elements to avoid</span></div>
+          <div data-panel="3" hidden><span class="field-label" data-lang="zh">提示词与参考图一起发送</span><span class="field-label" data-lang="en">Prompt and references, together</span><p class="prompt-example" data-lang="zh">先查看真实图片、原始文本和作者，再选择需要参与生成的参考。</p><p class="prompt-example" data-lang="en">Inspect real images, original text and authors. Select only the references you want to use.</p><span class="small" data-lang="zh">确认后选择模型与尺寸，生成结果进入图层编辑</span><span class="small" data-lang="en">Choose a model and size; the result opens in the layer editor</span></div>
         </div>
         <div class="preview-bottom"><span data-lang="zh">原生创作引导 · 流程示例</span><span data-lang="en">Native creative guide · illustrative preview</span><span>01 → 04</span></div>
       </aside>
     </div>
 
+
+    <section class="library-feature" id="offline-library">
+      <div class="section-heading"><div><div class="kicker">2.2.0 / The offline edition</div><h2 data-lang="zh">一整座灵感库，已经在你的 Mac 里。</h2><h2 data-lang="en">An entire reference library. Already on your Mac.</h2></div></div>
+      <div class="library-stats">
+        <div><strong>39</strong><span data-lang="zh">风格卡</span><span data-lang="en">Style cards</span></div>
+        <div><strong>23,196</strong><span data-lang="zh">原始提示词与帖子</span><span data-lang="en">Original prompts &amp; posts</span></div>
+        <div><strong>43,943</strong><span data-lang="zh">内置参考图片</span><span data-lang="en">Bundled reference images</span></div>
+      </div>
+      <div class="skill-pair">
+        <article><span class="kicker">01 / img-gen-taste</span><h3 data-lang="zh">先确定视觉方向</h3><h3 data-lang="en">Choose an art direction</h3><p data-lang="zh">比较 39 张风格卡的构图、光线、配色、材质与适用边界。实验性方向单独标示，主体、用途与禁止项始终由你决定。</p><p data-lang="en">Compare 39 cards across composition, light, palette, material and boundaries. Experimental directions are disclosed; the subject, purpose and constraints stay yours.</p></article>
+        <article><span class="kicker">02 / img-gen-prompts</span><h3 data-lang="zh">让真实案例提供依据</h3><h3 data-lang="en">Ground it in real references</h3><p data-lang="zh">在本地检索真实图片、未修改的原始文本与作者来源。原文、译文和新提示词分别展示；只有你明确选中的图片才会参与生成。</p><p data-lang="en">Search local prompt–image pairs with original text, authors and source links. Originals, translations and derived prompts remain separate. Only explicitly selected images enter generation.</p></article>
+      </div>
+      <p class="library-caption" data-lang="zh">38,519 张图片来自 <a href="https://github.com/NanmiCoder/open-image-prompts">Open Image Prompts</a>，另含 5,424 张 OpenNana 公开样图。图片与资料随应用内置，使用时无需再下载；AI 整理和生图仍需模型连接。来源及第三方权利声明保留。</p>
+      <p class="library-caption" data-lang="en">38,519 images from <a href="https://github.com/NanmiCoder/open-image-prompts">Open Image Prompts</a>, plus 5,424 public OpenNana previews. Images and reference data ship inside the app—no first-run resource download. AI adaptation and generation still require a model connection. Attribution and third-party rights are preserved.</p>
+      <a class="text-link" href="https://github.com/bennix/AIComposer/blob/main/docs/open-image-prompts.md"><span data-lang="zh">了解完整数据、来源与使用方式 ↗</span><span data-lang="en">Explore the data, attribution and workflow ↗</span></a>
+    </section>
 
     <section id="creative-flow" class="creative-section">
       <div class="section-heading"><div><div class="kicker">NEW / Guided creation</div><h2 data-lang="zh">先找到表达，再开始生成。</h2><h2 data-lang="en">Find the expression. Then generate.</h2></div><span class="edition">01—04</span></div>
@@ -225,11 +259,35 @@
         </article>
       </div>
       <div class="atlas-note">
-        <div><strong>5,424 / 24</strong><span data-lang="zh">公开图库索引 / 归纳画面配方</span><span data-lang="en">Public gallery index / visual recipes</span></div>
+        <div><strong>5,424 / 24</strong><span data-lang="zh">内置图库样图 / 归纳画面配方</span><span data-lang="en">Bundled gallery previews / visual recipes</span></div>
         <div>
           <p data-lang="zh">从 OpenNana 可公开访问的案例样图归纳画面构成、色彩、光线、材质与构图，再融合进创作引导。付费案例不复制原始提示词；根据可见图像提炼视觉特征，让参考灵感服务于你的主题。</p>
           <p data-lang="en">Visual traits such as composition, color, lighting, and material are distilled from publicly viewable OpenNana sample images and folded into the creative guide. Paid prompt text is not copied; visible images inform visual direction for your own subject.</p>
         </div>
+      </div>
+    </section>
+
+    <section id="download" class="download-section">
+      <div class="kicker">Download / 2.2.0 · Build 23</div>
+      <h2 data-lang="zh">把完整离线版带回你的 Mac。</h2><h2 data-lang="en">Bring the offline edition to your Mac.</h2>
+      <p data-lang="zh">完整公证 DMG 约 <strong>7.36GB</strong>，支持 Apple Silicon 与 Intel，要求 macOS 26.5 或更新版本。GitHub 每个发布文件限制小于 2GiB，因此下载分成四段，合并后与本地公证原件逐字节一致。</p>
+      <p data-lang="en">The complete notarized DMG is about <strong>7.36GB</strong>, for Apple Silicon and Intel on macOS 26.5 or later. GitHub limits each release asset to under 2GiB, so the download uses four parts that reconstruct the original notarized DMG byte-for-byte.</p>
+      <div class="actions"><a class="btn primary" href="https://github.com/bennix/AIComposer/releases/tag/v2.2.0"><span data-lang="zh">打开 2.2.0 下载页</span><span data-lang="en">Open the 2.2.0 release</span></a><a class="btn ghost" href="https://github.com/bennix/AIComposer/releases/download/v2.2.0/download-aicomposer.command"><span data-lang="zh">查看 / 下载合并助手</span><span data-lang="en">View / download helper</span></a></div>
+      <h3 data-lang="zh">在终端运行，自动下载、合并并校验</h3><h3 data-lang="en">Run in Terminal to download, join and verify</h3>
+      <p class="small" data-lang="zh">此命令先保存可查看的下载助手，再运行它；仅准备安装包，不会安装或启动 App。需要约 16GB 可用空间保存分段与合并后的 DMG，安装 App 另需约 8GB。网络中断后可运行同一命令重试。</p>
+      <p class="small" data-lang="en">This command saves an inspectable helper and runs it. It prepares the DMG without installing or launching the app. Allow about 16GB for the parts and reconstructed DMG, plus about 8GB to install the app. Run it again after an interrupted download.</p>
+      <pre class="download-command"><code id="download-code">curl -fL https://github.com/bennix/AIComposer/releases/download/v2.2.0/download-aicomposer.command -o "$HOME/Downloads/download-aicomposer.command" &amp;&amp; bash "$HOME/Downloads/download-aicomposer.command"</code></pre>
+      <button class="lang" type="button" id="copy-download"><span data-lang="zh">复制下载命令</span><span data-lang="en">Copy download command</span></button><span id="copy-status" class="small" role="status"></span>
+      <p class="small" data-lang="zh">也可以从发布页手动下载四段，再按 <a href="https://github.com/bennix/AIComposer/blob/main/docs/install-offline-edition.md">安装说明</a> 合并。首次从 2.1 升级到完整离线版需要手动下载；不会自动下载数 GB 数据。</p>
+      <p class="small" data-lang="en">You can also download all four parts manually and follow the <a href="https://github.com/bennix/AIComposer/blob/main/docs/install-offline-edition.md">installation guide</a>. Moving from 2.1 to the complete offline edition requires a manual download; multi-GB data is not downloaded automatically.</p>
+    </section>
+
+    <section id="release-notes">
+      <div class="kicker">What’s new / 2026.11.12</div><h2 data-lang="zh">2.2.0 更新说明</h2><h2 data-lang="en">What’s new in 2.2.0</h2>
+      <div class="grid">
+        <article class="tile"><h3 data-lang="zh">双 Skill 融入引导</h3><h3 data-lang="en">Two skills, one guide</h3><p data-lang="zh">视觉方向 → 真实案例 → 可编辑创作说明 → 中英文新提示词，接入现有图层与人物工作流。</p><p data-lang="en">Art direction → real references → an editable creative spec → bilingual derived prompts, connected to layers and character direction.</p></article>
+        <article class="tile"><h3 data-lang="zh">全部资料离线内置</h3><h3 data-lang="en">Fully bundled resources</h3><p data-lang="zh">23,196 条原文、39 张风格卡和 43,943 张图片随应用打包。逐文件校验，检索和看图不依赖在线图片地址。</p><p data-lang="en">23,196 originals, 39 cards and 43,943 images ship in the app. File-level verification; search and viewing do not depend on live image URLs.</p></article>
+        <article class="tile"><h3 data-lang="zh">来源可追溯</h3><h3 data-lang="en">Traceable evidence</h3><p data-lang="zh">保留原文、译文、作者与来源链接；相关结果明确标注缺少的条件，上游引用缺口不会被补造。</p><p data-lang="en">Originals, translations, authors and source links stay separate. Related matches disclose missing constraints; missing source citations are not invented.</p></article>
       </div>
     </section>
 
@@ -299,6 +357,8 @@
       <p data-lang="en"><strong>Based on Compositor.</strong> This project is a fork of <a href="https://github.com/robbietilton/Compositor">robbietilton/Compositor</a> (MIT). The original app is a free, open-source Mac editor for compositing and finishing. AIComposer adds ZenMux generation and editing on that layer workflow. Please keep the upstream license and credit.</p>
     </div>
 
+    <p class="library-caption" data-lang="zh">本仓库原创代码采用 <a href="https://github.com/bennix/AIComposer/blob/main/LICENSING.md">GPL-3.0-only</a>；上游与第三方保留各自许可。数据整理、原始帖子与图片的权利范围见来源说明。</p>
+    <p class="library-caption" data-lang="en">Original project code is <a href="https://github.com/bennix/AIComposer/blob/main/LICENSING.md">GPL-3.0-only</a>. Upstream and third-party terms remain applicable; data and image rights are documented separately.</p>
     <footer>
       <div>
         <div data-lang="zh">© 2026 AIComposer · 基于 Wonder Assembly LLC 的 Compositor</div>
@@ -312,6 +372,13 @@
     </footer>
   </div>
   <script>
+    document.getElementById("copy-download").addEventListener("click", async () => {
+      const status = document.getElementById("copy-status");
+      try {
+        await navigator.clipboard.writeText(document.getElementById("download-code").textContent);
+        status.textContent = document.documentElement.lang === "en" ? "Copied" : "已复制";
+      } catch { status.textContent = document.documentElement.lang === "en" ? "Select the command to copy it manually" : "请选中上方命令手动复制"; }
+    });
     const root = document.documentElement;
     const buttons = { zh: document.getElementById("btn-zh"), en: document.getElementById("btn-en") };
     function setLang(lang) {
