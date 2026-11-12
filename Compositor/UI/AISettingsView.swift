@@ -4,6 +4,8 @@ struct AISettingsView: View {
     @Bindable var settings: AISettingsController
     @Bindable private var languages = AppLanguageController.shared
     @State private var revealsKey = false
+    @State private var newModelName = ""
+    @State private var newModelUsesVertex = false
 
     init(settings: AISettingsController = .shared) {
         self.settings = settings
@@ -88,11 +90,33 @@ struct AISettingsView: View {
             }
             Section("Default model") {
                 Picker("Model", selection: $settings.selectedModel) {
-                    ForEach(AIImageModel.allCases) { model in
+                    ForEach(settings.credentials.imageModels) { model in
                         Text("\(model.title) · \(model.subtitle)").tag(model)
                     }
                 }
                 .accessibilityIdentifier("aiDefaultModel")
+                ForEach(settings.credentials.imageModels) { model in
+                    HStack {
+                        Text(model.rawValue).textSelection(.enabled)
+                        Spacer()
+                        Button(role: .destructive) { settings.removeImageModel(model) } label: {
+                            Image(systemName: "trash")
+                        }
+                        .accessibilityLabel("删除模型 \(model.rawValue)")
+                    }
+                }
+                TextField("模型 ID，例如 provider/model", text: $newModelName)
+                    .textFieldStyle(.roundedBorder)
+                Toggle("使用 Google Vertex generateContent 接口", isOn: $newModelUsesVertex)
+                Button("添加模型") {
+                    settings.addImageModel(newModelName, usesVertex: newModelUsesVertex)
+                    newModelName = ""
+                }
+                .disabled(newModelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                          settings.credentials.imageModels.contains { $0.rawValue == newModelName.trimmingCharacters(in: .whitespacesAndNewlines) })
+                Text("填写服务商提供的完整模型 ID。默认使用 OpenAI Images 接口。添加和删除会自动保存。")
+                    .font(.callout).foregroundStyle(.secondary)
+
             }
             Section("Multimodal model") {
                 TextField("Model name", text: $settings.credentials.multimodalModel)

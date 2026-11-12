@@ -3,6 +3,7 @@ import CryptoKit
 import Security
 
 nonisolated struct AICredentials: Codable, Equatable, Sendable {
+    var imageModels: [AIImageModel] = AIImageModel.allCases
     var baseURL: String
     var apiKey: String
     var defaultModel: String
@@ -24,7 +25,8 @@ nonisolated struct AICredentials: Codable, Equatable, Sendable {
             apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
             defaultModel: defaultModel.trimmingCharacters(in: .whitespacesAndNewlines),
             inviteLink: inviteLink.trimmingCharacters(in: .whitespacesAndNewlines),
-            multimodalModel: multimodalModel.trimmingCharacters(in: .whitespacesAndNewlines)
+            multimodalModel: multimodalModel.trimmingCharacters(in: .whitespacesAndNewlines),
+            imageModels: imageModels
         )
     }
 
@@ -42,10 +44,11 @@ nonisolated struct AICredentials: Codable, Equatable, Sendable {
         return URL(string: text)
     }
 
-    enum CodingKeys: String, CodingKey { case baseURL, apiKey, defaultModel, inviteLink, multimodalModel }
+    enum CodingKeys: String, CodingKey { case baseURL, apiKey, defaultModel, inviteLink, multimodalModel, imageModels }
 
     init(baseURL: String, apiKey: String, defaultModel: String, inviteLink: String = "",
-         multimodalModel: String = defaultMultimodalModel) {
+         multimodalModel: String = defaultMultimodalModel, imageModels: [AIImageModel] = AIImageModel.allCases) {
+        self.imageModels = imageModels
         self.baseURL = baseURL
         self.apiKey = apiKey
         self.defaultModel = defaultModel
@@ -55,11 +58,16 @@ nonisolated struct AICredentials: Codable, Equatable, Sendable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        imageModels = try container.decodeIfPresent([AIImageModel].self, forKey: .imageModels) ?? AIImageModel.allCases
         baseURL = try container.decodeIfPresent(String.self, forKey: .baseURL) ?? Self.defaultBaseURL
         apiKey = try container.decodeIfPresent(String.self, forKey: .apiKey) ?? ""
         defaultModel = try container.decodeIfPresent(String.self, forKey: .defaultModel) ?? AIImageModel.gptImage.rawValue
         inviteLink = try container.decodeIfPresent(String.self, forKey: .inviteLink) ?? ""
         multimodalModel = try container.decodeIfPresent(String.self, forKey: .multimodalModel) ?? Self.defaultMultimodalModel
+        if !container.contains(.imageModels), !defaultModel.isEmpty,
+           !imageModels.contains(where: { $0.rawValue == defaultModel }) {
+            imageModels.append(AIImageModel.resolved(defaultModel))
+        }
     }
 }
 

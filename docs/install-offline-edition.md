@@ -2,7 +2,7 @@
 
 - macOS 26.5 或更新版本；支持 Apple Silicon 与 Intel。
 - 公证 DMG：`Compositor-2.2.0.dmg`，7,356,692,625 字节（约 7.36GB）。
-- SHA-256：`cc12e0761917553d138da5fe3a7dd0d1ba532f17a7f90dbef000cd2906f1059e`。
+- SHA-256：`aab539659f9dbb3cef531dadf165138a44605727d4904a03478fcbbfb41709f5`。
 - 下载分段与合并结果需约 16GB 可用空间；安装 App 另需约 8GB。
 
 GitHub 每个 Release 文件必须小于 2GiB，完整包因此分成四段。

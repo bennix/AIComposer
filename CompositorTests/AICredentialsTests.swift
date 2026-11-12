@@ -53,4 +53,26 @@ struct AICredentialsTests {
             try AICredentialsStore(fileURL: url, keys: InMemoryAISecretKeyStore()).load()
         }
     }
+
+    @Test @MainActor func modelListPersistsAndDeletionRepairsSelection() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let store = try AICredentialsStore(fileURL: url, keys: InMemoryAISecretKeyStore())
+        let settings = AISettingsController(store: store)
+        settings.addImageModel(" vendor/custom-image ", usesVertex: true)
+        #expect(settings.selectedModel.rawValue == "vendor/custom-image")
+        #expect(settings.selectedModel.usesVertex)
+        settings.addImageModel("vendor/custom-image", usesVertex: false)
+        #expect(settings.credentials.imageModels.count == 4)
+        let reloaded = AISettingsController(store: store)
+        #expect(reloaded.selectedModel == settings.selectedModel)
+        reloaded.removeImageModel(reloaded.selectedModel)
+        #expect(reloaded.selectedModel == .gptImage)
+        for model in reloaded.credentials.imageModels { reloaded.removeImageModel(model) }
+        #expect(try store.load().imageModels.isEmpty)
+        #expect(reloaded.credentials.defaultModel.isEmpty)
+        reloaded.addImageModel("vendor/new", usesVertex: false)
+        #expect(reloaded.selectedModel.rawValue == "vendor/new")
+    }
+
 }

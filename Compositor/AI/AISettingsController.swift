@@ -80,7 +80,25 @@ final class AISettingsController {
     }
 
     var selectedModel: AIImageModel {
-        get { AIImageModel.resolved(credentials.defaultModel) }
+        get { credentials.imageModels.first { $0.rawValue == credentials.defaultModel } ?? credentials.imageModels.first ?? AIImageModel.resolved(credentials.defaultModel) }
         set { credentials.defaultModel = newValue.rawValue }
     }
+
+    func addImageModel(_ name: String, usesVertex: Bool) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !credentials.imageModels.contains(where: { $0.rawValue == name }) else { return }
+        let model = AIImageModel(rawValue: name, usesVertex: usesVertex)
+        credentials.imageModels.append(model)
+        selectedModel = model
+        save()
+    }
+
+    func removeImageModel(_ model: AIImageModel) {
+        credentials.imageModels.removeAll { $0.id == model.id }
+        if credentials.defaultModel == model.rawValue {
+            credentials.defaultModel = credentials.imageModels.first?.rawValue ?? ""
+        }
+        save()
+    }
+
 }

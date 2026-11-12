@@ -1,32 +1,27 @@
 import Foundation
 
-nonisolated enum AIImageModel: String, CaseIterable, Identifiable, Codable, Sendable {
-    case gptImage = "openai/gpt-image-2.5-sunburst"
-    case qwen = "qwen/qwen-image-3.0-pro"
-    case gemini = "google/gemini-3.1-flash-lite-image"
+nonisolated struct AIImageModel: Identifiable, Codable, Hashable, Sendable {
+    var rawValue: String
+    var usesVertex: Bool = false
+
+    static let gptImage = AIImageModel(rawValue: "openai/gpt-image-2.5-sunburst")
+    static let qwen = AIImageModel(rawValue: "qwen/qwen-image-3.0-pro")
+    static let gemini = AIImageModel(rawValue: "google/gemini-3.1-flash-lite-image", usesVertex: true)
+    static let allCases: [AIImageModel] = [.gptImage, .qwen, .gemini]
 
     var id: String { rawValue }
-
     var title: String {
-        switch self {
-        case .gptImage: L10n.t("GPT Image 2.5 Sunburst")
-        case .qwen: L10n.t("Qwen Image 3.0 Pro")
-        case .gemini: L10n.t("Gemini 3.1 Flash Lite Image")
+        switch rawValue {
+        case Self.gptImage.rawValue: L10n.t("GPT Image 2.5 Sunburst")
+        case Self.qwen.rawValue: L10n.t("Qwen Image 3.0 Pro")
+        case Self.gemini.rawValue: L10n.t("Gemini 3.1 Flash Lite Image")
+        default: rawValue
         }
     }
-
-    var subtitle: String {
-        switch self {
-        case .gptImage: L10n.t("OpenAI · detailed edits")
-        case .qwen: L10n.t("Qwen · text and layout")
-        case .gemini: L10n.t("Google Vertex · fast drafts")
-        }
-    }
-
-    var usesVertex: Bool { self == .gemini }
+    var subtitle: String { usesVertex ? "Google Vertex" : "OpenAI Images" }
 
     static func resolved(_ raw: String) -> AIImageModel {
-        AIImageModel(rawValue: raw) ?? .gptImage
+        allCases.first { $0.rawValue == raw } ?? AIImageModel(rawValue: raw)
     }
 }
 

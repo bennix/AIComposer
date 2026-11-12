@@ -4,6 +4,8 @@
 
 ## What’s new
 
+- Add and delete image models in Settings, including built-in entries. Custom model IDs support OpenAI Images or Google Vertex routing. Lists persist locally and are shared by generation and editing.
+
 - Integrates the Open Image Prompts `img-gen-taste` and `img-gen-prompts` workflow into native guided creation.
 - **39 style cards**, **23,196 original prompts/posts**, and **43,943 bundled reference images**: 38,519 from OIP and 5,424 public OpenNana previews.
 - All reference data and image files ship inside the app. Search, originals, translations and image browsing do not require a resource server or first-run download.
@@ -13,18 +15,18 @@
 
 ## Installation and updates
 
-macOS **26.5+**, **Apple Silicon and Intel**, version **2.2.0**, build **23**.
+macOS **26.5+**, **Apple Silicon and Intel**, version **2.2.0**, build **24**.
 Allow about **16GB** for the parts and reconstructed DMG, plus **8GB** for installation. The helper does not install or launch the app or weaken security settings.
 This full offline edition uses a manual-download Sparkle announcement, rather than an automatic multi-GB update.
 
 SHA-256 of the reconstructed DMG:
 
 ```text
-cc12e0761917553d138da5fe3a7dd0d1ba532f17a7f90dbef000cd2906f1059e
+aab539659f9dbb3cef531dadf165138a44605727d4904a03478fcbbfb41709f5
 ```
 
-Validation: Release universal build; 21 targeted tests; source and packaged offline-image integrity checks; readonly DMG mounting; Developer ID verification; Apple notarization; stapled ticket validation; Gatekeeper acceptance.
-Apple notarization submission: `20775649-895f-4cd0-a2b5-cf7b177730c2` (Accepted).
+Validation: Release universal build; targeted offline-library tests and 13 credential/model/API tests; source and packaged offline-image integrity checks; readonly DMG mounting; Developer ID verification; Apple notarization; stapled ticket validation; Gatekeeper acceptance.
+Apple notarization submission: `24c2a326-cfc7-4b67-a2bb-2002c411f1e0` (Accepted).
 
 ## Attribution and licensing
 
@@ -33,6 +35,8 @@ Apple notarization submission: `20775649-895f-4cd0-a2b5-cf7b177730c2` (Accepted)
 ---
 
 ## 中文更新说明
+
+设置中可添加或删除图像模型，填写完整模型 ID 并选择 OpenAI Images 或 Google Vertex 接口。模型列表自动保存，生图与改图共用。
 
 完整离线版现内置 39 张风格卡、23,196 条原始文本和 43,943 张参考图，融合到“创作意图 → 视觉方向与真实案例 → 画面语言 → 提示词确认”的引导流程。
 

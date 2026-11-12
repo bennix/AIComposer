@@ -51,7 +51,7 @@ struct AIStudioSheet: View {
                     .font(.callout).foregroundStyle(.secondary)
             } else {
                 Picker("Model", selection: $model) {
-                    ForEach(AIImageModel.allCases) { item in
+                    ForEach(settings.credentials.imageModels) { item in
                         Text(item.title).tag(item)
                     }
                 }
@@ -118,6 +118,7 @@ struct AIStudioSheet: View {
         .padding(24)
         .frame(minWidth: 540, idealWidth: 580)
         .disabled(session.isGeneratingAI)
+        .onChange(of: settings.credentials.imageModels) { _, _ in model = settings.selectedModel }
         .sheet(isPresented: $showsCreativeGuide) {
             AICreativeGuide(referenceImages: $referenceImages, characterPlan: $characterPlan) { prompt = $0 }
         }
@@ -130,6 +131,7 @@ struct AIStudioSheet: View {
 
     private var canRun: Bool {
         guard !session.isGeneratingAI, settings.credentials.hasAPIKey,
+              kind.usesMultimodal || settings.credentials.imageModels.contains(model),
               characterPlan.validation(references: referenceImages.map(\.characterReference)) == nil else { return false }
         if kind.requiresPrompt { return !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         if kind == .expand {
