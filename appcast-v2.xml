@@ -3,13 +3,14 @@
   <channel>
     <title>AIComposer</title>
     <item>
-      <title>Version 2.1.0</title>
-      <pubDate>Sun, 11 Oct 2026 01:43:21 +0000</pubDate>
-      <sparkle:version>22</sparkle:version>
-      <sparkle:shortVersionString>2.1.0</sparkle:shortVersionString>
+      <title>AIComposer 2.2.0 — Complete Offline Edition</title>
+      <pubDate>Thu, 12 Nov 2026 03:03:26 +0000</pubDate>
+      <sparkle:version>24</sparkle:version>
+      <sparkle:shortVersionString>2.2.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.5</sparkle:minimumSystemVersion>
-      <link>https://github.com/bennix/AIComposer/releases/tag/v2.1.0</link>
-      <enclosure url="https://github.com/bennix/AIComposer/releases/download/v2.1.0/Compositor-2.1.0.dmg" sparkle:edSignature="4fnirVou+P1re/zhcJvNm8DRAB0B+5yYSiTqzab/pBj14wZWuA5QYkb4rk+RFykIEQZzRD6bAiqzozwqMMR7BA==" length="8974923" type="application/octet-stream"/>
+      <description><![CDATA[<p>39 style cards, 23,196 originals and 43,943 bundled images. The complete offline edition is a 7.36GB manual download; visit the download page for the verified multipart helper.</p><p>完整离线版包含全部图片，需要手动下载与合并，不会自动下载数 GB 资源。</p>]]></description>
+      <link>https://bennix.github.io/AIComposer/#download</link>
+      <sparkle:informationalUpdate/>
     </item>
   </channel>
 </rss>
