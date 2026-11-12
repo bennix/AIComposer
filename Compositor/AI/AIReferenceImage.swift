@@ -8,6 +8,9 @@ struct AIReferenceImage: Identifiable {
     var role: AIReferenceRole = .inspiration
     var personID: UUID?
     var detail = ""
+    var sourceRecordID: String?
+    var sourceURL: URL?
+    var sourceAuthor: String?
 
     var characterReference: AICharacterReference {
         AICharacterReference(id: id, role: role, personID: personID, detail: detail)

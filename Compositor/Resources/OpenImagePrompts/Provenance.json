@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/NanmiCoder/open-image-prompts",
+  "commit": "6862f01c447c48f215981df57b2243e5a8ebb70a",
+  "counts": {
+    "records": 23196,
+    "images": 38519,
+    "tags": 568909
+  },
+  "datasetVersion": "2026-11-12-0607",
+  "archiveSHA256": "fc1aec61183e461fe14eadb0344baad01f5509dcfab16f7332544bb3267ead8d"
+}

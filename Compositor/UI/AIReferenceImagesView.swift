@@ -34,6 +34,9 @@ struct AIReferenceImagesView: View {
                                     .accessibilityLabel("删除参考图 \(index + 1)")
                             }
                         Text("参考图 \(index + 1)").font(.caption).foregroundStyle(.secondary)
+                        if let source = item.sourceURL {
+                            Link(item.sourceAuthor ?? "参考来源", destination: source).font(.caption).lineLimit(1).frame(width: 100)
+                        }
                         if !people.isEmpty {
                             Picker("用途", selection: $images[index].role) {
                                 ForEach(AIReferenceRole.allCases) { Text($0.title).tag($0) }

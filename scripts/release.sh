@@ -20,6 +20,9 @@ NOTARY_PROFILE=compositor-notary
 WORK="$HOME/Library/Caches/CompositorRelease"
 DIST="$PROJECT_DIR/dist"
 
+echo "==> Verifying the complete offline creative library"
+python3 "$PROJECT_DIR/scripts/verify_creative_images.py" --resources "$PROJECT_DIR/Compositor/Resources"
+
 settings=$(xcodebuild -project "$PROJECT_DIR/$APP.xcodeproj" -scheme "$APP" -configuration Release -showBuildSettings 2>/dev/null)
 VERSION=$(print -r -- "$settings" | awk -F' = ' '/ MARKETING_VERSION = /{print $2; exit}')
 BUILD=$(print -r -- "$settings" | awk -F' = ' '/ CURRENT_PROJECT_VERSION = /{print $2; exit}')
@@ -43,11 +46,8 @@ xcodebuild -exportArchive -quiet \
 APP_PATH="$WORK/export/$APP.app"
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
-echo "==> Notarizing the app"
-ditto -c -k --keepParent "$APP_PATH" "$WORK/$APP.zip"
-xcrun notarytool submit "$WORK/$APP.zip" --keychain-profile "$NOTARY_PROFILE" --wait
-xcrun stapler staple "$APP_PATH"
-
+# Apple notarizes the final container and its nested app in one submission.
+# See https://developer.apple.com/documentation/security/customizing-the-notarization-workflow
 echo "==> Building the DMG window"
 STAGE="$WORK/dmg"
 mkdir -p "$STAGE"
@@ -89,6 +89,8 @@ echo "==> Signing and notarizing the DMG"
 codesign --sign "$IDENTITY" --timestamp "$DMG"
 xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
 xcrun stapler staple "$DMG"
+# Also staple the exported standalone app using the ticket from the same submission.
+xcrun stapler staple "$APP_PATH"
 
 echo "==> What Gatekeeper will say on another Mac"
 spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG"

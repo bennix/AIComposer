@@ -12,7 +12,8 @@ struct AICreativeGuide: View {
     @State private var atlas: AIStyleAtlas?
     @State private var gallery: AIPromptGallery?
     @State private var reference: AIPromptReference?
-    @State private var exploration = 0
+    @State private var exploration = 2
+    @State private var oip = OIPWorkflow()
     @State private var galleryQuery = ""
     @State private var galleryCategory = ""
     @State private var visibleReferences = 100
@@ -51,8 +52,11 @@ struct AICreativeGuide: View {
                         Picker("探索方式", selection: $exploration) {
                             Text("风格图谱").tag(0)
                             Text("图库灵感").tag(1)
+                            Text("Open Image Prompts · 双 Skill").tag(2)
                         }.pickerStyle(.segmented)
-                        if exploration == 0 { styles } else { inspirations }
+                        if exploration == 0 { styles }
+                        else if exploration == 1 { inspirations }
+                        else { OIPCreativePanel(workflow: oip, images: $referenceImages, subject: brief.subject, purpose: brief.purpose) }
                     }
                 case 2: direction
                 default:
@@ -73,7 +77,7 @@ struct AICreativeGuide: View {
                 Spacer()
                 Button(step == 3 ? "使用提示词" : "下一步") {
                     if step == 3 { apply(preview); dismiss() }
-                    else { if step == 2 { preview = brief.prompt }; step += 1 }
+                    else { if step == 2 { preview = reviewPrompt }; step += 1 }
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(step == 0 ? brief.subject.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty :
@@ -82,7 +86,11 @@ struct AICreativeGuide: View {
             }
         }
         .padding(24).frame(width: 800, height: 650)
+        .onChange(of: referenceImages.map(\.id)) { oip.invalidateDerived() }
+        .onChange(of: oip.spec) { oip.invalidateDerived() }
+        .onChange(of: oip.selected.map(\.id)) { oip.invalidateDerived() }
         .task {
+            await oip.load()
             do { atlas = try AIStyleAtlas.load() }
             catch { self.error = "风格库加载失败：\(error.localizedDescription)" }
             do {
@@ -92,6 +100,11 @@ struct AICreativeGuide: View {
             }
             catch { self.error = "图库索引加载失败：\(error.localizedDescription)" }
         }
+    }
+
+    private var reviewPrompt: String {
+        guard exploration == 2 else { return brief.prompt }
+        return [oip.currentPrompt, brief.direction].filter { !$0.isEmpty }.joined(separator: "\n")
     }
 
     private var referencePromptBinding: Binding<String> {
@@ -182,7 +195,7 @@ struct AICreativeGuide: View {
         VStack(alignment: .leading, spacing: 10) {
             if let gallery {
                 HStack {
-                    Text("OpenNana · \(gallery.total) 条公开案例索引 · \(gallery.importedAt)")
+                    Text("OpenNana · \(gallery.total) 条案例与内置样图 · \(gallery.importedAt)")
                     Spacer()
                     Link("来源图库", destination: URL(string: gallery.source)!)
                 }.font(.caption).foregroundStyle(.secondary)
@@ -226,11 +239,12 @@ struct AICreativeGuide: View {
                         if let reference {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(reference.title).font(.headline)
-                                AsyncImage(url: URL(string: reference.thumbnail)) { image in
-                                    image.resizable().scaledToFit()
-                                } placeholder: {
-                                    Text("公开样图预览；网络不可用时可打开来源查看").font(.caption).foregroundStyle(.secondary)
-                                }.frame(maxHeight: 190).accessibilityLabel("图库公开样图")
+                                if let url = reference.bundledThumbnailURL, let image = NSImage(contentsOf: url) {
+                                    Image(nsImage: image).resizable().scaledToFit()
+                                        .frame(maxHeight: 190).accessibilityLabel("内置图库样图")
+                                } else {
+                                    Text("内置样图缺失，请使用包含完整资源的安装包。").font(.caption).foregroundStyle(.secondary)
+                                }
                                 Text("公开样图归纳 · 可迁移的配方家族").font(.caption).foregroundStyle(.secondary)
                                 if let recipe = visualLibrary?.recipe(for: reference) {
                                     Text(recipe.summary).font(.callout)
@@ -268,6 +282,9 @@ struct AICreativeGuide: View {
             Text("03 / 把风格变成你的画面").font(.title3.bold())
             Text(brief.style.map { "已选择：\($0.title)。模板会提供基础视觉语言，你可以补充构图、光线、配色和需要避免的元素。" } ?? "补充构图、光线、配色和需要避免的元素。")
                 .foregroundStyle(.secondary)
+            if exploration == 2 || oip.card != nil || !oip.selected.isEmpty {
+                OIPDirectionEditor(workflow: oip, images: $referenceImages)
+            }
             if let reference {
                 Text("灵感参考：\(reference.title)").font(.headline)
                 Text(visualLibrary?.recipe(for: reference)?.summary ?? reference.basis)
@@ -291,7 +308,7 @@ struct AICreativeGuide: View {
             Text("例如：低机位，暖色窗光与冷色街道形成对比；保留伞的轮廓，避免文字与水印。")
                 .font(.callout).foregroundStyle(.secondary)
             Text("提示词预览").font(.headline)
-            ScrollView { Text(AIReferenceImage.prompt(brief.prompt, images: referenceImages, plan: characterPlan)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+            ScrollView { Text(AIReferenceImage.prompt(reviewPrompt, images: referenceImages, plan: characterPlan)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
         }
         }
     }

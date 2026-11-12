@@ -27,3 +27,7 @@ BUILD_PLAN.md
 # Generated
 scripts/__pycache__/
 __pycache__/
+
+# Full offline creative-image payloads; prepared from attributed upstream sources.
+Compositor/Resources/OpenImagePromptsImages.bundle/images/
+Compositor/Resources/OpenNanaImages.bundle/images/

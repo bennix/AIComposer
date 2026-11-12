@@ -83,3 +83,7 @@ AI 生图与风格重绘等面板现支持四步创作引导，包含 Vibe Shot 
 ### 2.x 更新通道
 
 2.x 使用独立的 `appcast-v2.xml` 与 Sparkle 更新签名。从 1.x 升级请手动下载安装公证 DMG；2.x 后续更新使用新通道。签名私钥在本机钥匙串的 `aicomposer` 账户下，发布时须使用同一密钥。
+
+### Open Image Prompts 双 Skill 创作流
+
+引导式创作现整合 `img-gen-taste` 的 39 张风格卡与 `img-gen-prompts` 的全量 23,196 条原始文本、38,519 张图片索引。支持原生本地检索、真实参考预览、原文/译文分离、作者来源、全部图片内置离线浏览，以及基于所选参考整理中英文新提示词。详见 [完整使用与数据说明](docs/open-image-prompts.md)。

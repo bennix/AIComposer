@@ -14,6 +14,12 @@ nonisolated struct AIPromptReference: Codable, Identifiable, Hashable, Sendable 
     let source: String
     let thumbnail: String
 
+    var bundledThumbnailURL: URL? {
+        guard id.allSatisfy(\.isNumber), let root = Bundle.main.url(forResource: "OpenNanaImages", withExtension: "bundle") else { return nil }
+        let url = root.appending(path: "images/\(id).image")
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
     var category: String {
         if mediaType == "video" { return "视频参考" }
         if title.localizedCaseInsensitiveContains("UI") || title.contains("界面") { return "界面设计" }
